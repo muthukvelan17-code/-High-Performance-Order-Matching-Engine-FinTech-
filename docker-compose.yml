@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  trading-engine:
+    build: .
+    ports:
+      - "9090:9090" # gRPC
+      - "8080:8080" # Actuator/Metrics
+    volumes:
+      - ./data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

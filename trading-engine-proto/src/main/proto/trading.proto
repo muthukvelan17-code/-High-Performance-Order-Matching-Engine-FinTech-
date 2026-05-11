@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package com.trading.engine.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.trading.engine.grpc";
+option java_outer_classname = "TradingProto";
+
+service TradingService {
+    rpc SubmitOrder (OrderRequest) returns (OrderResponse);
+    rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
+    rpc StreamMarketData (MarketDataRequest) returns (stream MarketDataUpdate);
+}
+
+enum OrderSide {
+    BUY = 0;
+    SELL = 1;
+}
+
+enum OrderType {
+    LIMIT = 0;
+    MARKET = 1;
+    IOC = 2;
+}
+
+message OrderRequest {
+    int64 order_id = 1;
+    string symbol = 2;
+    int64 price = 3;
+    int64 quantity = 4;
+    OrderSide side = 5;
+    OrderType type = 6;
+    int64 user_id = 7;
+}
+
+message CancelOrderRequest {
+    int64 order_id = 1;
+    string symbol = 2;
+}
+
+message OrderResponse {
+    bool success = 1;
+    string message = 2;
+    int64 order_id = 3;
+}
+
+message MarketDataRequest {
+    string symbol = 1;
+}
+
+message MarketDataUpdate {
+    string symbol = 1;
+    repeated PriceLevel bids = 2;
+    repeated PriceLevel asks = 3;
+    repeated TradeEvent trades = 4;
+}
+
+message PriceLevel {
+    int64 price = 1;
+    int64 quantity = 2;
+}
+
+message TradeEvent {
+    int64 trade_id = 1;
+    int64 price = 2;
+    int64 quantity = 3;
+    int64 timestamp = 4;
+}

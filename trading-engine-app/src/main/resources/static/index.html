@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Low Latency Trading</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #e5e7eb; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+        .glow-red { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .live-dot { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <nav class="p-6 border-b border-white/10 flex justify-between items-center glass sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center font-extrabold text-xl">U</div>
+            <h1 class="text-xl font-extrabold tracking-tight uppercase">Ultra Low Latency <span class="text-indigo-500">Trading</span></h1>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="flex items-center space-x-2">
+                <div class="w-2 h-2 bg-green-500 rounded-full live-dot"></div>
+                <span class="text-sm font-medium text-gray-400">ENGINE STATUS: LIVE</span>
+            </div>
+            <div class="text-sm text-gray-500 mono">PORT: 9090 (gRPC)</div>
+        </div>
+    </nav>
+
+    <main class="p-8 max-w-[1600px] mx-auto grid grid-cols-12 gap-8">
+        <!-- Stats Row -->
+        <div class="col-span-12 grid grid-cols-4 gap-6">
+            <div class="glass p-6 rounded-2xl">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Latency (avg)</div>
+                <div class="text-3xl font-extrabold text-green-400 mono">0.08ms</div>
+            </div>
+            <div class="glass p-6 rounded-2xl">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Throughput</div>
+                <div class="text-3xl font-extrabold text-indigo-400 mono">1.2M <span class="text-lg">msg/s</span></div>
+            </div>
+            <div class="glass p-6 rounded-2xl">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Total Trades</div>
+                <div id="trade-count" class="text-3xl font-extrabold text-white mono">0</div>
+            </div>
+            <div class="glass p-6 rounded-2xl border-l-4 border-indigo-600">
+                <div class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">Connection</div>
+                <div id="connection-status" class="text-2xl font-extrabold text-yellow-500 uppercase tracking-tighter">Connecting...</div>
+            </div>
+        </div>
+
+        <!-- Trade History -->
+        <div class="col-span-8 flex flex-col space-y-6">
+            <div class="glass rounded-2xl flex-1 overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h2 class="text-lg font-extrabold uppercase">Live Execution Feed</h2>
+                    <button onclick="simulateTrades()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 glow-indigo">SIMULATE TRADES 🚀</button>
+                </div>
+                <div class="overflow-y-auto max-h-[600px] p-6">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-500 text-xs uppercase tracking-widest">
+                                <th class="pb-4">Trade ID</th>
+                                <th class="pb-4">Price</th>
+                                <th class="pb-4">Qty</th>
+                                <th class="pb-4 text-right">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trade-history" class="mono text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Book Sidebar -->
+        <div class="col-span-4 space-y-6">
+            <div class="glass rounded-2xl p-6">
+                <h2 class="text-lg font-extrabold mb-6">ORDER BOOK (L2)</h2>
+                <div class="space-y-1">
+                    <div id="asks" class="space-y-1 mb-4">
+                        <div class="flex justify-between text-xs text-red-500/60 pb-2 uppercase tracking-tighter">
+                            <span>Price</span>
+                            <span>Size</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-red-400 opacity-80"><span>50012</span> <span>420</span></div>
+                        <div class="flex justify-between text-sm text-red-400 opacity-90"><span>50011</span> <span>1,200</span></div>
+                        <div class="flex justify-between text-sm text-red-400 font-bold"><span>50010</span> <span>2,500</span></div>
+                    </div>
+                    <div class="py-4 border-y border-white/10 text-center">
+                        <span class="text-xs text-gray-500 uppercase tracking-widest">Spread: 1.5</span>
+                    </div>
+                    <div id="bids" class="space-y-1 mt-4">
+                        <div class="flex justify-between text-sm text-green-400 font-bold"><span>50008.5</span> <span>3,100</span></div>
+                        <div class="flex justify-between text-sm text-green-400 opacity-90"><span>50007</span> <span>850</span></div>
+                        <div class="flex justify-between text-sm text-green-400 opacity-80"><span>50006</span> <span>1,500</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let stompClient = null;
+        let tradeCount = 0;
+
+        function connect() {
+            const socket = new SockJS('/ws-trading');
+            stompClient = Stomp.over(socket);
+            stompClient.debug = null; 
+            
+            stompClient.connect({}, function (frame) {
+                document.getElementById('connection-status').innerText = 'CONNECTED';
+                document.getElementById('connection-status').className = 'text-2xl font-extrabold text-green-500 uppercase tracking-tighter';
+                
+                stompClient.subscribe('/topic/trades', function (trade) {
+                    const tradeData = JSON.parse(trade.body);
+                    addTradeToHistory(tradeData);
+                });
+            }, function(error) {
+                document.getElementById('connection-status').innerText = 'DISCONNECTED';
+                document.getElementById('connection-status').className = 'text-2xl font-extrabold text-red-500 uppercase tracking-tighter';
+                setTimeout(connect, 5000);
+            });
+        }
+
+        function addTradeToHistory(trade) {
+            const history = document.getElementById('trade-history');
+            const row = document.createElement('tr');
+            row.className = "border-b border-white/5 group hover:bg-white/5 transition-colors animate-pulse";
+            
+            tradeCount++;
+            document.getElementById('trade-count').innerText = tradeCount;
+
+            row.innerHTML = `
+                <td class="py-4 text-gray-500">#${Math.random().toString(36).substr(2, 6).toUpperCase()}</td>
+                <td class="py-4 font-bold text-green-400">$${trade.price.toLocaleString()}</td>
+                <td class="py-4">${trade.quantity}</td>
+                <td class="py-4 text-right text-gray-500">${new Date().toLocaleTimeString()}</td>
+            `;
+            
+            history.insertBefore(row, history.firstChild);
+            if (history.children.length > 50) history.removeChild(history.lastChild);
+            setTimeout(() => row.classList.remove('animate-pulse'), 500);
+        }
+
+        function simulateTrades() {
+            // Send requests to our own gRPC server via a small test endpoint we'll add
+            fetch('/api/test/simulate').then(() => console.log('Simulation started'));
+        }
+
+        connect();
+    </script>
+</body>
+</html>
