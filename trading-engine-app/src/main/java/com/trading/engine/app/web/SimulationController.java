@@ -48,4 +48,32 @@ public class SimulationController {
         }).start();
         return "Simulation Started";
     }
+
+    @GetMapping("/api/test/bot")
+    public String startBot() {
+        new Thread(() -> {
+            java.util.Random random = new java.util.Random();
+            long price = 50000;
+            for (int i = 0; i < 500; i++) {
+                try {
+                    price += (random.nextInt(11) - 5);
+                    engine.submitOrder(Order.builder()
+                            .orderId(System.nanoTime())
+                            .symbol("BTCUSD")
+                            .price(price)
+                            .quantity(random.nextInt(100) + 10)
+                            .side(random.nextBoolean() ? OrderSide.BUY : OrderSide.SELL)
+                            .type(OrderType.LIMIT)
+                            .userId(999)
+                            .remainingQuantity(100)
+                            .build());
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }).start();
+        return "Market Maker Bot Started (500 orders)";
+    }
 }

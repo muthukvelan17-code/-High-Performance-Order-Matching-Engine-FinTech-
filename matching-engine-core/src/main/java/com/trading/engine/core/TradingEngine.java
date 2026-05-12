@@ -1,14 +1,18 @@
 package com.trading.engine.core;
 
+import com.lmax.disruptor.BusySpinWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.trading.engine.core.engine.*;
 import com.trading.engine.core.event.OrderEvent;
 import com.trading.engine.core.event.OrderEventFactory;
 import com.trading.engine.core.persistence.Journaler;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.Executors;
 
+@Slf4j
 public class TradingEngine {
     @Getter
     private final Disruptor<OrderEvent> disruptor;
@@ -21,8 +25,10 @@ public class TradingEngine {
         int bufferSize = 1024 * 64; // Must be power of 2
         this.disruptor = new Disruptor<>(
                 new OrderEventFactory(),
-                bufferSize,
-                DaemonThreadFactory.INSTANCE
+                65536,
+                DaemonThreadFactory.INSTANCE,
+                ProducerType.SINGLE,
+                new BusySpinWaitStrategy()
         );
 
         this.matchingHandler = new MatchingEngineHandler();
@@ -39,6 +45,7 @@ public class TradingEngine {
     }
 
     public void submitOrder(com.trading.engine.core.model.Order order) {
+        log.info("Submitting order: {} {} @ {}", order.side(), order.symbol(), order.price());
         disruptor.getRingBuffer().publishEvent((event, sequence) -> {
             event.clear();
             event.setOrder(order);
@@ -52,5 +59,9 @@ public class TradingEngine {
             event.setCancelOrderId(orderId);
             event.setEventType(OrderEvent.EventType.CANCEL_ORDER);
         });
+    }
+
+    public com.trading.engine.core.model.OrderBookSnapshot getOrderBookSnapshot(String symbol) {
+        return matchingHandler.getSnapshot(symbol);
     }
 }

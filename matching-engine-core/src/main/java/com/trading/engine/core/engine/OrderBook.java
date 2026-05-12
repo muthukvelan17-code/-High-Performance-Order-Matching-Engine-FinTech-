@@ -4,19 +4,20 @@ import com.trading.engine.core.model.Order;
 import com.trading.engine.core.model.OrderSide;
 import com.trading.engine.core.model.OrderStatus;
 import com.trading.engine.core.model.Trade;
+import org.agrona.collections.Long2ObjectHashMap;
 import java.util.*;
 
 public class OrderBook {
     private final String symbol;
     private final TreeMap<Long, PriceLevel> bids; // Price -> Level (Descending)
     private final TreeMap<Long, PriceLevel> asks; // Price -> Level (Ascending)
-    private final Map<Long, Order> orderMap; // OrderId -> Order for fast lookup/cancel
+    private final Long2ObjectHashMap<Order> orderMap; // OrderId -> Order for fast lookup/cancel (Primitive map)
 
     public OrderBook(String symbol) {
         this.symbol = symbol;
         this.bids = new TreeMap<>(Collections.reverseOrder());
         this.asks = new TreeMap<>();
-        this.orderMap = new HashMap<>();
+        this.orderMap = new Long2ObjectHashMap<>();
     }
 
     public List<Trade> processOrder(Order takerOrder) {
@@ -109,5 +110,28 @@ public class OrderBook {
                 }
             }
         }
+    }
+
+    public com.trading.engine.core.model.OrderBookSnapshot getSnapshot(int depth) {
+        return com.trading.engine.core.model.OrderBookSnapshot.builder()
+                .symbol(symbol)
+                .bids(getTopLevels(bids, depth))
+                .asks(getTopLevels(asks, depth))
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
+
+    private List<com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData> getTopLevels(TreeMap<Long, PriceLevel> side, int depth) {
+        List<com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData> levels = new ArrayList<>();
+        int count = 0;
+        for (Map.Entry<Long, PriceLevel> entry : side.entrySet()) {
+            if (count >= depth) break;
+            levels.add(com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData.builder()
+                    .price(entry.getKey())
+                    .quantity(entry.getValue().getTotalQuantity())
+                    .build());
+            count++;
+        }
+        return levels;
     }
 }

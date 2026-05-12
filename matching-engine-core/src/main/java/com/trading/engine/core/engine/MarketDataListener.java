@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface MarketDataListener {
     void onTrade(List<Trade> trades);
-    void onOrderBookUpdate(String symbol);
+    void onOrderBookUpdate(com.trading.engine.core.model.OrderBookSnapshot snapshot);
 }

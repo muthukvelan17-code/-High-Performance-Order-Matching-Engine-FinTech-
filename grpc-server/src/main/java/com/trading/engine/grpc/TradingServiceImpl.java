@@ -49,12 +49,17 @@ public class TradingServiceImpl extends TradingServiceGrpc.TradingServiceImplBas
 
     @Override
     public void streamMarketData(MarketDataRequest request, StreamObserver<MarketDataUpdate> responseObserver) {
+        io.grpc.stub.ServerCallStreamObserver<MarketDataUpdate> serverObserver = 
+            (io.grpc.stub.ServerCallStreamObserver<MarketDataUpdate>) responseObserver;
+        
         marketDataService.streamMarketData(request.getSymbol())
-                .subscribe(
-                    responseObserver::onNext,
-                    responseObserver::onError,
-                    responseObserver::onCompleted
-                );
+                .subscribe(update -> {
+                    if (serverObserver.isReady()) {
+                        serverObserver.onNext(update);
+                    }
+                }, 
+                serverObserver::onError, 
+                serverObserver::onCompleted);
     }
 
     private OrderType translateType(com.trading.engine.grpc.OrderType type) {

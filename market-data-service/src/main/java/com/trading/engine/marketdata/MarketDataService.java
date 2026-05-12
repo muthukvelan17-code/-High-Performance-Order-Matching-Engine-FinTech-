@@ -37,11 +37,11 @@ public class MarketDataService implements MarketDataListener {
     }
 
     @Override
-    public void onOrderBookUpdate(String symbol) {
-        // In a real system, we'd send the incremental update or top of book
-        // For this sprint, we'll just send a notification or empty update
+    public void onOrderBookUpdate(com.trading.engine.core.model.OrderBookSnapshot snapshot) {
+        String symbol = snapshot.getSymbol();
         MarketDataUpdate update = MarketDataUpdate.newBuilder()
                 .setSymbol(symbol)
+                // In a real system, we'd map the snapshot to the Protobuf message
                 .build();
         broadcast(symbol, update);
     }

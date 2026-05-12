@@ -22,9 +22,7 @@ public class MonitoringMarketDataListener implements MarketDataListener {
     }
 
     @Override
-    public void onOrderBookUpdate(String symbol) {
-        // In a real app, we'd fetch the snapshot from the order book
-        // For the dashboard demo, we'll focus on trades first
-        broadcaster.broadcastOrderBook(symbol, "OrderBook Updated");
+    public void onOrderBookUpdate(com.trading.engine.core.model.OrderBookSnapshot snapshot) {
+        broadcaster.broadcastOrderBook(snapshot.getSymbol(), snapshot);
     }
 }

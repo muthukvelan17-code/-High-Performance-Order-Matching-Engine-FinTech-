@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class MatchingEngineHandler implements EventHandler<OrderEvent> {
     private final Map<String, OrderBook> orderBooks = new HashMap<>();
 
@@ -19,23 +22,28 @@ public class MatchingEngineHandler implements EventHandler<OrderEvent> {
 
         switch (event.getEventType()) {
             case NEW_ORDER -> {
-                System.out.println("[MatchingEngine] New Order: " + event.getOrder().side() + " " + event.getOrder().symbol() + " @ " + event.getOrder().price() + " qty: " + event.getOrder().quantity());
+                log.info("[MatchingEngine] New Order: {} {} @ {} qty: {}", event.getOrder().side(), event.getOrder().symbol(), event.getOrder().price(), event.getOrder().quantity());
                 List<Trade> trades = book.processOrder(event.getOrder());
                 for (Trade trade : trades) {
-                    System.out.println("[MATCHED] Trade: " + trade.quantity() + " " + trade.symbol() + " at " + trade.price() + " (Maker: " + trade.makerOrderId() + ", Taker: " + trade.takerOrderId() + ")");
+                    log.info("[MATCHED] Trade: {} {} at {} (Maker: {}, Taker: {})", trade.quantity(), trade.symbol(), trade.price(), trade.makerOrderId(), trade.takerOrderId());
                 }
                 event.getTrades().addAll(trades);
             }
             case CANCEL_ORDER -> {
-                System.out.println("[MatchingEngine] Cancel Order: " + event.getCancelOrderId());
                 book.cancelOrder(event.getCancelOrderId());
             }
             case MODIFY_ORDER -> {
-                System.out.println("[MatchingEngine] Modify Order: " + event.getOrder().orderId());
                 book.cancelOrder(event.getOrder().orderId());
                 List<Trade> trades = book.processOrder(event.getOrder());
                 event.getTrades().addAll(trades);
             }
         }
+        
+        event.setSnapshot(book.getSnapshot(10));
+    }
+
+    public com.trading.engine.core.model.OrderBookSnapshot getSnapshot(String symbol) {
+        OrderBook book = orderBooks.get(symbol);
+        return book != null ? book.getSnapshot(10) : null;
     }
 }

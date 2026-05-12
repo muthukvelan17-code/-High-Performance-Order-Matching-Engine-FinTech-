@@ -10,3 +10,4 @@ target/
 *.swp
 .vscode/
 bin/
+*.dat

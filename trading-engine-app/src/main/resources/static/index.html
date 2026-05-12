@@ -59,7 +59,10 @@
             <div class="glass rounded-2xl flex-1 overflow-hidden flex flex-col">
                 <div class="p-6 border-b border-white/10 flex justify-between items-center">
                     <h2 class="text-lg font-extrabold uppercase">Live Execution Feed</h2>
-                    <button onclick="simulateTrades()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 glow-indigo">SIMULATE TRADES 🚀</button>
+                    <div class="flex space-x-2">
+                        <button onclick="startBot()" class="bg-indigo-600/20 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-500 hover:text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95">START MARKET MAKER 🤖</button>
+                        <button onclick="simulateTrades()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 glow-indigo">SIMULATE TRADES 🚀</button>
+                    </div>
                 </div>
                 <div class="overflow-y-auto max-h-[600px] p-6">
                     <table class="w-full text-left">
@@ -93,7 +96,7 @@
                         <div class="flex justify-between text-sm text-red-400 font-bold"><span>50010</span> <span>2,500</span></div>
                     </div>
                     <div class="py-4 border-y border-white/10 text-center">
-                        <span class="text-xs text-gray-500 uppercase tracking-widest">Spread: 1.5</span>
+                        <span id="spread-value" class="text-xs text-gray-500 uppercase tracking-widest">Spread: 0.0</span>
                     </div>
                     <div id="bids" class="space-y-1 mt-4">
                         <div class="flex justify-between text-sm text-green-400 font-bold"><span>50008.5</span> <span>3,100</span></div>
@@ -108,6 +111,7 @@
     <script>
         let stompClient = null;
         let tradeCount = 0;
+        const currentSymbol = 'BTCUSD';
 
         function connect() {
             const socket = new SockJS('/ws-trading');
@@ -118,15 +122,66 @@
                 document.getElementById('connection-status').innerText = 'CONNECTED';
                 document.getElementById('connection-status').className = 'text-2xl font-extrabold text-green-500 uppercase tracking-tighter';
                 
+                // Subscribe to trade updates
                 stompClient.subscribe('/topic/trades', function (trade) {
                     const tradeData = JSON.parse(trade.body);
                     addTradeToHistory(tradeData);
                 });
+
+                // Subscribe to Order Book updates
+                stompClient.subscribe(`/topic/orderbook/${currentSymbol}`, function (snapshot) {
+                    const data = JSON.parse(snapshot.body);
+                    renderOrderBook(data);
+                });
+
             }, function(error) {
                 document.getElementById('connection-status').innerText = 'DISCONNECTED';
                 document.getElementById('connection-status').className = 'text-2xl font-extrabold text-red-500 uppercase tracking-tighter';
                 setTimeout(connect, 5000);
             });
+        }
+
+        function renderOrderBook(data) {
+            const asksDiv = document.getElementById('asks');
+            const bidsDiv = document.getElementById('bids');
+            
+            const maxQty = Math.max(
+                ...data.asks.map(a => a.quantity),
+                ...data.bids.map(b => b.quantity),
+                1
+            );
+
+            // Render Asks (Red) - Sorted Descending for UI (Highest at top)
+            asksDiv.innerHTML = `
+                <div class="flex justify-between text-xs text-red-500/60 pb-2 uppercase tracking-tighter">
+                    <span>Price</span>
+                    <span>Size</span>
+                </div>
+                ${data.asks.slice().reverse().map(ask => `
+                    <div class="relative flex justify-between text-sm py-1 px-2 group overflow-hidden">
+                        <div class="absolute inset-y-0 right-0 bg-red-500/10 group-hover:bg-red-500/20 transition-all" style="width: ${(ask.quantity/maxQty)*100}%"></div>
+                        <span class="relative text-red-400 font-mono font-bold">${ask.price.toLocaleString()}</span>
+                        <span class="relative font-mono">${ask.quantity.toLocaleString()}</span>
+                    </div>
+                `).join('')}
+            `;
+
+            // Render Bids (Green) - Sorted Descending
+            bidsDiv.innerHTML = `
+                ${data.bids.map(bid => `
+                    <div class="relative flex justify-between text-sm py-1 px-2 group overflow-hidden">
+                        <div class="absolute inset-y-0 right-0 bg-green-500/10 group-hover:bg-green-500/20 transition-all" style="width: ${(bid.quantity/maxQty)*100}%"></div>
+                        <span class="relative text-green-400 font-mono font-bold">${bid.price.toLocaleString()}</span>
+                        <span class="relative font-mono">${bid.quantity.toLocaleString()}</span>
+                    </div>
+                `).join('')}
+            `;
+
+            // Update Spread
+            if (data.asks.length > 0 && data.bids.length > 0) {
+                const spread = (data.asks[0].price - data.bids[0].price).toFixed(2);
+                document.getElementById('spread-value').innerText = `Spread: ${spread}`;
+            }
         }
 
         function addTradeToHistory(trade) {
@@ -139,7 +194,7 @@
 
             row.innerHTML = `
                 <td class="py-4 text-gray-500">#${Math.random().toString(36).substr(2, 6).toUpperCase()}</td>
-                <td class="py-4 font-bold text-green-400">$${trade.price.toLocaleString()}</td>
+                <td class="py-4 font-bold text-indigo-400">$${trade.price.toLocaleString()}</td>
                 <td class="py-4">${trade.quantity}</td>
                 <td class="py-4 text-right text-gray-500">${new Date().toLocaleTimeString()}</td>
             `;
@@ -150,8 +205,17 @@
         }
 
         function simulateTrades() {
-            // Send requests to our own gRPC server via a small test endpoint we'll add
-            fetch('/api/test/simulate').then(() => console.log('Simulation started'));
+            fetch('/api/test/simulate')
+                .then(r => r.text())
+                .then(t => console.log(t))
+                .catch(e => console.error('Sim error:', e));
+        }
+
+        function startBot() {
+            fetch('/api/test/bot')
+                .then(r => r.text())
+                .then(t => alert(t))
+                .catch(e => console.error('Bot error:', e));
         }
 
         connect();

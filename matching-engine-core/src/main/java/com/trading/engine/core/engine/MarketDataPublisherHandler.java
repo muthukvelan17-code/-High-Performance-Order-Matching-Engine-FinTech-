@@ -15,9 +15,8 @@ public class MarketDataPublisherHandler implements EventHandler<OrderEvent> {
         }
         
         // Notify order book update for every event that modifies the book
-        String symbol = event.getOrder() != null ? event.getOrder().symbol() : null;
-        if (symbol != null) {
-            listener.onOrderBookUpdate(symbol);
+        if (event.getSnapshot() != null) {
+            listener.onOrderBookUpdate(event.getSnapshot());
         }
     }
 }
