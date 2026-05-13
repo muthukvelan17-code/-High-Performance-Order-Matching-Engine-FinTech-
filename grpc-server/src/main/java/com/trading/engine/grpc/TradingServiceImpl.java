@@ -7,7 +7,9 @@ import com.trading.engine.core.model.OrderType;
 import com.trading.engine.marketdata.MarketDataService;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class TradingServiceImpl extends TradingServiceGrpc.TradingServiceImplBase {
     private final TradingEngine engine;
@@ -15,6 +17,27 @@ public class TradingServiceImpl extends TradingServiceGrpc.TradingServiceImplBas
 
     @Override
     public void submitOrder(OrderRequest request, StreamObserver<OrderResponse> responseObserver) {
+        // Edge Risk Validation
+        if (request.getQuantity() <= 0) {
+            log.warn("Rejected order {}: Quantity must be > 0", request.getOrderId());
+            responseObserver.onNext(OrderResponse.newBuilder()
+                    .setSuccess(false)
+                    .setOrderId(request.getOrderId())
+                    .build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        if (request.getPrice() <= 0 && request.getType() == com.trading.engine.grpc.OrderType.LIMIT) {
+            log.warn("Rejected order {}: Limit price must be > 0", request.getOrderId());
+            responseObserver.onNext(OrderResponse.newBuilder()
+                    .setSuccess(false)
+                    .setOrderId(request.getOrderId())
+                    .build());
+            responseObserver.onCompleted();
+            return;
+        }
+
         Order order = Order.builder()
                 .orderId(request.getOrderId())
                 .symbol(request.getSymbol())

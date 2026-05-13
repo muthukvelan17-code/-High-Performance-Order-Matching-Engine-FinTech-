@@ -10,6 +10,8 @@ import com.trading.engine.core.event.OrderEventFactory;
 import com.trading.engine.core.persistence.Journaler;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.openhft.affinity.AffinityThreadFactory;
+import net.openhft.affinity.AffinityStrategies;
 import java.util.concurrent.Executors;
 
 @Slf4j
@@ -26,7 +28,7 @@ public class TradingEngine {
         this.disruptor = new Disruptor<>(
                 new OrderEventFactory(),
                 65536,
-                DaemonThreadFactory.INSTANCE,
+                new AffinityThreadFactory("TradingEngine", AffinityStrategies.SAME_SOCKET, true),
                 ProducerType.SINGLE,
                 new BusySpinWaitStrategy()
         );

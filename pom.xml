@@ -34,6 +34,7 @@
         <jmh.version>1.37</jmh.version>
         <agrona.version>1.21.1</agrona.version>
         <lombok.version>1.18.30</lombok.version>
+        <thread.affinity.version>3.23.3</thread.affinity.version>
     </properties>
 
     <dependencyManagement>
@@ -98,6 +99,13 @@
                 <groupId>org.agrona</groupId>
                 <artifactId>agrona</artifactId>
                 <version>${agrona.version}</version>
+            </dependency>
+
+            <!-- OpenHFT Thread Affinity -->
+            <dependency>
+                <groupId>net.openhft</groupId>
+                <artifactId>affinity</artifactId>
+                <version>${thread.affinity.version}</version>
             </dependency>
 
             <!-- gRPC & Protobuf -->

@@ -8,28 +8,40 @@ import org.agrona.collections.Long2ObjectHashMap;
 import java.util.*;
 
 public class OrderBook {
+    private static final int MAX_PRICE_LEVELS = 10000;
+    
     private final String symbol;
-    private final TreeMap<Long, PriceLevel> bids; // Price -> Level (Descending)
-    private final TreeMap<Long, PriceLevel> asks; // Price -> Level (Ascending)
-    private final Long2ObjectHashMap<Order> orderMap; // OrderId -> Order for fast lookup/cancel (Primitive map)
+    private final Long2ObjectHashMap<PriceLevel> bidLevels; 
+    private final Long2ObjectHashMap<PriceLevel> askLevels;
+    
+    private final long[] bidPrices;
+    private int numBids;
+    
+    private final long[] askPrices;
+    private int numAsks;
+    
+    private final Long2ObjectHashMap<Order> orderMap;
 
     public OrderBook(String symbol) {
         this.symbol = symbol;
-        this.bids = new TreeMap<>(Collections.reverseOrder());
-        this.asks = new TreeMap<>();
+        this.bidLevels = new Long2ObjectHashMap<>();
+        this.askLevels = new Long2ObjectHashMap<>();
+        this.bidPrices = new long[MAX_PRICE_LEVELS];
+        this.askPrices = new long[MAX_PRICE_LEVELS];
+        this.numBids = 0;
+        this.numAsks = 0;
         this.orderMap = new Long2ObjectHashMap<>();
     }
 
     public List<Trade> processOrder(Order takerOrder) {
-        List<Trade> trades = new ArrayList<>();
+        List<Trade> trades = new ArrayList<>(); 
         
         if (takerOrder.side() == OrderSide.BUY) {
-            matchOrder(takerOrder, asks, trades);
+            matchOrder(takerOrder, askLevels, askPrices, numAsks, true, trades);
         } else {
-            matchOrder(takerOrder, bids, trades);
+            matchOrder(takerOrder, bidLevels, bidPrices, numBids, false, trades);
         }
 
-        // If order still has remaining quantity and is not IOC/Market
         if (takerOrder.remainingQuantity() > 0) {
             addLimitOrder(takerOrder);
         }
@@ -37,29 +49,25 @@ public class OrderBook {
         return trades;
     }
 
-    private void matchOrder(Order takerOrder, TreeMap<Long, PriceLevel> oppositeSide, List<Trade> trades) {
+    private void matchOrder(Order takerOrder, Long2ObjectHashMap<PriceLevel> oppositeLevels, long[] oppositePrices, int numOppositePrices, boolean isOppositeAsk, List<Trade> trades) {
         long remainingQty = takerOrder.remainingQuantity();
         
-        Iterator<Map.Entry<Long, PriceLevel>> iterator = oppositeSide.entrySet().iterator();
-        while (iterator.hasNext() && remainingQty > 0) {
-            Map.Entry<Long, PriceLevel> entry = iterator.next();
-            long price = entry.getKey();
+        int i = 0;
+        while (i < numOppositePrices && remainingQty > 0) {
+            long price = oppositePrices[i];
             
-            // For BUY order, price must be <= taker price
-            // For SELL order, price must be >= taker price
             if (takerOrder.side() == OrderSide.BUY && price > takerOrder.price()) break;
             if (takerOrder.side() == OrderSide.SELL && price < takerOrder.price()) break;
 
-            PriceLevel level = entry.getValue();
-            Iterator<Order> orderIterator = level.getOrders().iterator();
+            PriceLevel level = oppositeLevels.get(price);
+            Order makerOrder = level.head();
             
-            while (orderIterator.hasNext() && remainingQty > 0) {
-                Order makerOrder = orderIterator.next();
+            while (makerOrder != null && remainingQty > 0) {
+                Order nextOrder = makerOrder.next();
                 long matchQty = Math.min(remainingQty, makerOrder.remainingQuantity());
                 
-                // Create trade
                 Trade trade = Trade.builder()
-                        .tradeId(System.nanoTime()) // In production, use a proper ID generator
+                        .tradeId(System.nanoTime()) 
                         .makerOrderId(makerOrder.orderId())
                         .takerOrderId(takerOrder.orderId())
                         .symbol(symbol)
@@ -71,29 +79,47 @@ public class OrderBook {
                 trades.add(trade);
                 remainingQty -= matchQty;
                 
-                // Update maker order (Simplified: in a real engine we'd update a mutable state)
-                // For this sprint, I'll assume we update the order state or the caller handles it
-                // level.reduceQuantity(matchQty);
+                makerOrder.remainingQuantity(makerOrder.remainingQuantity() - matchQty);
+                level.totalQuantity(level.totalQuantity() - matchQty);
                 
-                if (matchQty == makerOrder.remainingQuantity()) {
-                    orderIterator.remove();
+                if (makerOrder.remainingQuantity() == 0) {
+                    level.removeOrder(makerOrder);
                     orderMap.remove(makerOrder.orderId());
-                } else {
-                    // Update remaining quantity logic
-                    // In high perf, we'd use mutable orders
                 }
+                
+                makerOrder = nextOrder;
             }
             
             if (level.isEmpty()) {
-                iterator.remove();
+                removePrice(oppositePrices, i, numOppositePrices);
+                oppositeLevels.remove(price);
+                if (isOppositeAsk) numAsks--; else numBids--;
+                numOppositePrices--;
+            } else {
+                i++;
             }
         }
+        takerOrder.remainingQuantity(remainingQty);
     }
 
     private void addLimitOrder(Order order) {
         if (order.type() == com.trading.engine.core.model.OrderType.LIMIT) {
-            TreeMap<Long, PriceLevel> side = (order.side() == OrderSide.BUY) ? bids : asks;
-            side.computeIfAbsent(order.price(), PriceLevel::new).addOrder(order);
+            boolean isBuy = order.side() == OrderSide.BUY;
+            Long2ObjectHashMap<PriceLevel> levels = isBuy ? bidLevels : askLevels;
+            PriceLevel level = levels.get(order.price());
+            
+            if (level == null) {
+                level = new PriceLevel(order.price());
+                levels.put(order.price(), level);
+                if (isBuy) {
+                    insertPrice(bidPrices, numBids, order.price(), true);
+                    numBids++;
+                } else {
+                    insertPrice(askPrices, numAsks, order.price(), false);
+                    numAsks++;
+                }
+            }
+            level.addOrder(order);
             orderMap.put(order.orderId(), order);
         }
     }
@@ -101,37 +127,74 @@ public class OrderBook {
     public void cancelOrder(long orderId) {
         Order order = orderMap.remove(orderId);
         if (order != null) {
-            TreeMap<Long, PriceLevel> side = (order.side() == OrderSide.BUY) ? bids : asks;
-            PriceLevel level = side.get(order.price());
+            boolean isBuy = order.side() == OrderSide.BUY;
+            Long2ObjectHashMap<PriceLevel> levels = isBuy ? bidLevels : askLevels;
+            PriceLevel level = levels.get(order.price());
+            
             if (level != null) {
                 level.removeOrder(order);
                 if (level.isEmpty()) {
-                    side.remove(order.price());
+                    levels.remove(order.price());
+                    if (isBuy) {
+                        removePrice(bidPrices, indexOf(bidPrices, numBids, order.price()), numBids);
+                        numBids--;
+                    } else {
+                        removePrice(askPrices, indexOf(askPrices, numAsks, order.price()), numAsks);
+                        numAsks--;
+                    }
                 }
             }
         }
     }
 
+    private void insertPrice(long[] prices, int numPrices, long price, boolean descending) {
+        int i = 0;
+        while (i < numPrices) {
+            if (descending) {
+                if (price > prices[i]) break;
+            } else {
+                if (price < prices[i]) break;
+            }
+            i++;
+        }
+        if (i < numPrices) {
+            System.arraycopy(prices, i, prices, i + 1, numPrices - i);
+        }
+        prices[i] = price;
+    }
+
+    private void removePrice(long[] prices, int index, int numPrices) {
+        if (index >= 0 && index < numPrices) {
+            System.arraycopy(prices, index + 1, prices, index, numPrices - index - 1);
+        }
+    }
+
+    private int indexOf(long[] prices, int numPrices, long price) {
+        for (int i = 0; i < numPrices; i++) {
+            if (prices[i] == price) return i;
+        }
+        return -1;
+    }
+
     public com.trading.engine.core.model.OrderBookSnapshot getSnapshot(int depth) {
         return com.trading.engine.core.model.OrderBookSnapshot.builder()
                 .symbol(symbol)
-                .bids(getTopLevels(bids, depth))
-                .asks(getTopLevels(asks, depth))
+                .bids(getTopLevels(bidLevels, bidPrices, numBids, depth))
+                .asks(getTopLevels(askLevels, askPrices, numAsks, depth))
                 .timestamp(System.currentTimeMillis())
                 .build();
     }
 
-    private List<com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData> getTopLevels(TreeMap<Long, PriceLevel> side, int depth) {
-        List<com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData> levels = new ArrayList<>();
-        int count = 0;
-        for (Map.Entry<Long, PriceLevel> entry : side.entrySet()) {
-            if (count >= depth) break;
-            levels.add(com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData.builder()
-                    .price(entry.getKey())
-                    .quantity(entry.getValue().getTotalQuantity())
+    private List<com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData> getTopLevels(Long2ObjectHashMap<PriceLevel> levels, long[] prices, int numPrices, int depth) {
+        List<com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData> snapshotLevels = new ArrayList<>();
+        int count = Math.min(depth, numPrices);
+        for (int i = 0; i < count; i++) {
+            long price = prices[i];
+            snapshotLevels.add(com.trading.engine.core.model.OrderBookSnapshot.PriceLevelData.builder()
+                    .price(price)
+                    .quantity(levels.get(price).totalQuantity())
                     .build());
-            count++;
         }
-        return levels;
+        return snapshotLevels;
     }
 }

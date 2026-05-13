@@ -1,34 +1,58 @@
 package com.trading.engine.core.engine;
 
 import com.trading.engine.core.model.Order;
-import java.util.LinkedList;
-import java.util.Queue;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Getter
+@Setter
+@Accessors(fluent = true)
 public class PriceLevel {
     private final long price;
-    private final Queue<Order> orders;
+    private Order head;
+    private Order tail;
     private long totalQuantity;
 
     public PriceLevel(long price) {
         this.price = price;
-        this.orders = new LinkedList<>();
         this.totalQuantity = 0;
     }
 
     public void addOrder(Order order) {
-        orders.add(order);
+        if (tail == null) {
+            head = order;
+            tail = order;
+            order.prev(null);
+            order.next(null);
+        } else {
+            tail.next(order);
+            order.prev(tail);
+            order.next(null);
+            tail = order;
+        }
         totalQuantity += order.remainingQuantity();
     }
 
     public void removeOrder(Order order) {
-        if (orders.remove(order)) {
-            totalQuantity -= order.remainingQuantity();
+        if (order.prev() != null) {
+            order.prev().next(order.next());
+        } else {
+            head = order.next();
         }
+
+        if (order.next() != null) {
+            order.next().prev(order.prev());
+        } else {
+            tail = order.prev();
+        }
+
+        order.next(null);
+        order.prev(null);
+        totalQuantity -= order.remainingQuantity();
     }
 
     public boolean isEmpty() {
-        return orders.isEmpty();
+        return head == null;
     }
 }
