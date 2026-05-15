@@ -28,7 +28,7 @@ public class TradingEngine {
         this.disruptor = new Disruptor<>(
                 new OrderEventFactory(),
                 65536,
-                new AffinityThreadFactory("TradingEngine", AffinityStrategies.SAME_SOCKET, true),
+                new AffinityThreadFactory("TradingEngine", true, AffinityStrategies.SAME_SOCKET),
                 ProducerType.SINGLE,
                 new BusySpinWaitStrategy()
         );
