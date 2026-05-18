@@ -4,6 +4,8 @@ import com.trading.engine.core.TradingEngine;
 import com.trading.engine.grpc.TradingServiceImpl;
 import com.trading.engine.marketdata.MarketDataService;
 import com.trading.engine.persistence.ChronicleJournaler;
+import com.trading.engine.app.db.CompositeJournaler;
+import com.trading.engine.app.db.DatabaseJournaler;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.springframework.boot.CommandLineRunner;
@@ -30,8 +32,9 @@ public class TradingEngineApplication {
     }
 
     @Bean
-    public TradingEngine tradingEngine(ChronicleJournaler journaler, com.trading.engine.core.engine.MarketDataListener marketDataListener) {
-        return new TradingEngine(journaler, marketDataListener);
+    public TradingEngine tradingEngine(ChronicleJournaler chronicleJournaler, DatabaseJournaler databaseJournaler, com.trading.engine.core.engine.MarketDataListener marketDataListener) {
+        CompositeJournaler compositeJournaler = new CompositeJournaler(chronicleJournaler, databaseJournaler);
+        return new TradingEngine(compositeJournaler, marketDataListener);
     }
 
     @Bean

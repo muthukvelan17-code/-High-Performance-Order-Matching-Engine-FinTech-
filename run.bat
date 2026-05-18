@@ -36,7 +36,7 @@ set MAVEN_CMD=.maven\bin\mvn.cmd
 :build
 echo.
 echo Step 1: Building the project with Maven...
-call "%MAVEN_CMD%" clean package -DskipTests
+call "%MAVEN_CMD%" package -DskipTests
 if %errorlevel% neq 0 (
     echo [ERROR] Maven build failed!
     pause
