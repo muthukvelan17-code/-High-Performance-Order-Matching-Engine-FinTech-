@@ -11,9 +11,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class LiquidityProviderBot {
     private final TradingServiceGrpc.TradingServiceBlockingStub stub;
-    private final Random random = new Random();
-    private final String symbol = "BTCUSD";
-    private long lastPrice = 50000;
+    private final java.util.Random random = new java.util.Random();
     private long orderIdCounter = 1000000;
 
     public LiquidityProviderBot(String host, int port) {
@@ -24,33 +22,39 @@ public class LiquidityProviderBot {
     }
 
     public void start() {
-        log.info("Starting Liquidity Provider Bot for {}...", symbol);
+        log.info("Starting Multi-Asset Liquidity Provider Bot (gRPC)...");
         
+        // Start BTC/USD Market Maker
+        startMarketMaker("BTCUSD", 60500);
+        
+        // Start ETH/USD Market Maker
+        startMarketMaker("ETHUSD", 3200);
+    }
+
+    private void startMarketMaker(String symbol, long initialPrice) {
         new Thread(() -> {
+            long lastPrice = initialPrice;
             while (true) {
                 try {
-                    provideLiquidity();
-                    TimeUnit.MILLISECONDS.sleep(100); // 10 orders per second
+                    // Randomly drift the price slightly
+                    lastPrice += (random.nextInt(11) - 5); 
+                    
+                    // Place a Buy order slightly below last price
+                    submit(symbol, OrderSide.BUY, lastPrice - 1 - random.nextInt(5));
+                    
+                    // Place a Sell order slightly above last price
+                    submit(symbol, OrderSide.SELL, lastPrice + 1 + random.nextInt(5));
+                    
+                    TimeUnit.MILLISECONDS.sleep(150); // Fast trading
                 } catch (Exception e) {
-                    log.error("Bot encountered error: {}", e.getMessage());
+                    log.error("Bot error for {}: {}", symbol, e.getMessage());
                     try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException ignored) {}
                 }
             }
-        }).start();
+        }, "Bot-" + symbol).start();
     }
 
-    private void provideLiquidity() {
-        // Randomly drift the price slightly
-        lastPrice += (random.nextInt(11) - 5); 
-        
-        // Place a Buy order slightly below last price
-        submit(OrderSide.BUY, lastPrice - 1 - random.nextInt(5));
-        
-        // Place a Sell order slightly above last price
-        submit(OrderSide.SELL, lastPrice + 1 + random.nextInt(5));
-    }
-
-    private void submit(OrderSide side, long price) {
+    private void submit(String symbol, OrderSide side, long price) {
         OrderRequest request = OrderRequest.newBuilder()
                 .setOrderId(++orderIdCounter)
                 .setSymbol(symbol)
@@ -69,6 +73,9 @@ public class LiquidityProviderBot {
     }
 
     public static void main(String[] args) {
+        System.out.println("==================================================");
+        System.out.println("  Starting Custom gRPC Trading Bot");
+        System.out.println("==================================================");
         LiquidityProviderBot bot = new LiquidityProviderBot("localhost", 9090);
         bot.start();
     }

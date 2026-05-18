@@ -39,7 +39,15 @@ graph LR
 ### Prerequisites
 - JDK 21
 - Maven 3.9+
-- Docker & Docker Compose
+- Docker & Docker Compose (Optional)
+
+### 🚀 Quick Start (Easiest Way)
+We've included simple scripts to build and start the engine in a single step:
+
+- **Windows:** Double-click `run.bat` or run it from your command line.
+- **Mac/Linux:** Open a terminal and run `./run.sh` (you may need to run `chmod +x run.sh` first).
+
+This will automatically build the project and launch the trading engine. You will see logs indicating that the engine is ready and accepting requests.
 
 ### Building the Project
 ```bash

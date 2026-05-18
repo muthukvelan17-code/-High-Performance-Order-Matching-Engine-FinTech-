@@ -57,7 +57,13 @@
         <!-- Order Book Section -->
         <div class="lg:col-span-2 glass rounded-xl p-5 shadow-lg flex flex-col">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold tracking-wide">BTC/USD <span class="text-slate-500 text-sm font-normal">Order Book</span></h2>
+                <h2 class="text-xl font-bold tracking-wide">
+                    <select id="symbol-select" onchange="changeSymbol(this.value)" class="bg-transparent text-slate-800 font-bold focus:outline-none border-b-2 border-blue-500 pb-1 cursor-pointer">
+                        <option value="BTCUSD">BTC/USD</option>
+                        <option value="ETHUSD">ETH/USD</option>
+                    </select>
+                    <span class="text-slate-500 text-sm font-normal ml-2">Order Book</span>
+                </h2>
                 <div class="text-xs text-slate-500 mono">Depth: 10</div>
             </div>
             
@@ -127,8 +133,36 @@
     </div>
 
     <script>
-        const SYMBOL = 'BTCUSD';
+        let SYMBOL = 'BTCUSD';
         let stompClient = null;
+        let currentSubscription = null;
+
+        function changeSymbol(newSymbol) {
+            SYMBOL = newSymbol;
+            logActivity(`Switched market to ${SYMBOL}`);
+            
+            // Update the websocket subscription
+            if (currentSubscription) {
+                currentSubscription.unsubscribe();
+            }
+            if (stompClient && stompClient.connected) {
+                currentSubscription = stompClient.subscribe(`/topic/market-data/${SYMBOL}`, function (message) {
+                    const data = JSON.parse(message.body);
+                    if(data.type === 'ORDER_BOOK_SNAPSHOT') {
+                        updateOrderBook(data.payload);
+                    }
+                });
+            }
+            
+            // Clear current order book UI
+            document.getElementById('bids-container').innerHTML = '';
+            document.getElementById('asks-container').innerHTML = '';
+            
+            // Update the default order price to be realistic
+            document.getElementById('order-price').value = (SYMBOL === 'BTCUSD') ? 60500 : 3200;
+            
+            pollOrderBook();
+        }
 
         // --- WebSocket Connection ---
         function connect() {
@@ -148,8 +182,8 @@
                 `;
                 logActivity("WebSocket connected successfully.");
 
-                // Subscribe to Market Data
-                stompClient.subscribe(`/topic/market-data/${SYMBOL}`, function (message) {
+                // Subscribe to Market Data for the current symbol
+                currentSubscription = stompClient.subscribe(`/topic/market-data/${SYMBOL}`, function (message) {
                     const data = JSON.parse(message.body);
                     if(data.type === 'ORDER_BOOK_SNAPSHOT') {
                         updateOrderBook(data.payload);
