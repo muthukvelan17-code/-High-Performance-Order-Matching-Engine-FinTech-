@@ -16,7 +16,6 @@
         <module>market-data-service</module>
         <module>persistence-module</module>
         <module>benchmarking-module</module>
-        <module>monitoring-module</module>
         <module>trading-engine-app</module>
     </modules>
 

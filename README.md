@@ -1,98 +1,83 @@
-# Ultra Low Latency Trading Engine
+# ⚡ Project 1: High-Performance Order Matching Engine (FinTech)
 
-A production-grade High-Frequency Trading (HFT) Matching Engine built with Java 21, LMAX Disruptor, and Chronicle Map.
+A production-grade, low-latency financial trading core designed to match buy and sell orders for a high-frequency cryptocurrency or stock exchange. By operating entirely **in-memory** during active trading sessions, this engine bypasses traditional database bottlenecks. It leverages advanced concurrency models and lock-free ring-buffer data structures to achieve sub-millisecond execution times and comfortably scale to handle millions of transactions per second.
 
-## Architecture
+---
 
-The system follows a **Clean Architecture / Hexagonal** design, optimized for ultra-low latency and high throughput using lock-free programming patterns.
+## 🏛️ Project Information
 
-### Core Components
-- **Matching Engine Core**: Single-threaded order book implementation per symbol to avoid locking. Uses price-time priority.
-- **LMAX Disruptor**: High-performance inter-thread messaging system. Acts as the event backbone.
-- **Chronicle Map**: Off-heap persistence for order books and trade history, ensuring zero GC impact.
-- **gRPC Server**: Low-latency communication layer for order submission and market data streaming.
-- **Project Reactor**: Used for reactive market data streaming.
+> [!NOTE]
+> **Core Architecture:** The engine is built on a lock-free single-writer thread pattern to ensure absolute consistency and determinism in matching logic, without the CPU cache-bouncing associated with heavy thread locks.
 
-### Event Pipeline
+- **In-Memory Operations:** All active order books and matching states are processed entirely within RAM.
+- **Low Latency Processing:** Optimized data layouts and custom data structures ensure predictable sub-millisecond round-trip latencies.
+- **Throughput Scalability:** Engineered to process millions of trade events per second under high market volatility.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology | Role & Details |
+| :--- | :--- | :--- |
+| **Language** | `Java 21` | Leveraging **Virtual Threads** (Project Loom) for lightweight task management and modern memory API capabilities. |
+| **Concurrency Framework** | `LMAX Disruptor` | Provides ultra-high-throughput, lock-free, and extremely low-latency inter-thread messaging via circular ring buffers. |
+| **Memory Management** | `Chronicle Map` | Off-heap key-value storage used to achieve Zero-GC pauses and real-time asynchronous state persistence. |
+| **Communication** | `gRPC & Protocol Buffers` | Fast, typed, binary-serialized microservice communications for external gateway ingestion and market data feeds. |
+| **Testing & Validation** | `JMH & JUnit 5` | Microbenchmarking using the **Java Microbenchmark Harness** alongside exhaustive test suites for matching rules. |
+
+---
+
+## 🌟 Expected Impact
+
+- **Scalable Infrastructure:** Handles massive spikes in market activity and heavy volume spikes without systemic degradation or queue-clogging.
+- **Fair Execution Guarantees:** Extremely low jitter and predictable latency bounds ensure fair order matching, reducing execution slippage for institutional and retail traders alike.
+- **GC Isolation:** Moves hot-path objects completely off-heap, isolating the engine from standard JVM Garbage Collection latency spikes.
+
+---
+
+## 📅 4-Week Development Timeline
+
 ```mermaid
-graph LR
-    Producer[gRPC/REST] --> Disruptor((Ring Buffer))
-    Disruptor --> Risk[Risk Validation]
-    Risk --> Match[Matching Engine]
-    Match --> Journal[Chronicle Journaler]
-    Match --> MD[Market Data Publisher]
-    Journal --> Disk[(Off-Heap Storage)]
-    MD --> Clients[gRPC Stream Clients]
+gantt
+    title 4-Week Development Schedule
+    dateFormat  YYYY-MM-DD
+    section Week 1: Core Domain
+    Protobuf Schemas       :active, 2026-05-01, 2d
+    Order Book Engine      :active, 2026-05-03, 3d
+    Unit & Priority Tests :active, 2026-05-06, 2d
+    section Week 2: Concurrency
+    Disruptor Ring Buffer  :2026-05-08, 3d
+    Consumer Event Handlers :2026-05-11, 3d
+    Stress & Race Testing  :2026-05-14, 1d
+    section Week 3: Persistence
+    Chronicle Map Storage  :2026-05-15, 3d
+    gRPC Server Ingestion  :2026-05-18, 3d
+    Backpressure Control   :2026-05-21, 1d
+    section Week 4: Tuning
+    JMH Benchmarking       :2026-05-22, 3d
+    ZGC & Shenandoah Tuning:2026-05-25, 2d
+    Production Deployment  :2026-05-27, 2d
 ```
 
-## Tech Stack
-- **Java 21**: Virtual Threads, Records, and ZGC.
-- **Spring Boot 3.2**: Bootstrapping and DI.
-- **LMAX Disruptor 4.0**: Lock-free concurrency.
-- **Chronicle Map**: Off-heap memory management.
-- **gRPC & Protobuf**: Binary serialization and RPC.
-- **Micrometer & JMX**: Monitoring and metrics.
-- **JMH**: Micro-benchmarking.
+### 🔹 Week 1: Core Domain & Data Structures
+*   **Day 1-2:** Define Protocol Buffer schemas (`.proto`) for `Order`, `Trade`, and real-time `Market Data` events.
+*   **Day 3-5:** Implement core matching logic (`OrderBook`, `PriceLevels`) using primitive arrays and object pooling patterns to completely eliminate GC garbage collection overhead in the active loop.
+*   **Day 6-7:** Write extensive unit tests to strictly validate price-time priority (FIFO) order matching.
 
-## Getting Started
+### 🔹 Week 2: LMAX Disruptor Integration
+*   **Day 1-3:** Configure the `LMAX Disruptor` ring buffer to decouple incoming order ingestion from matching and execution threads.
+*   **Day 4-6:** Implement specific, dedicated consumer event handlers:
+    *   *Matching Engine Handler* (executes matches sequentially)
+    *   *Risk Validation Handler* (pre-trade checks)
+    *   *Journaling Handler* (records input transactions)
+*   **Day 7:** Run high-concurrency multi-threaded stress tests to isolate potential race conditions or direct memory leaks.
 
-### Prerequisites
-- JDK 21
-- Maven 3.9+
-- Docker & Docker Compose (Optional)
+### 🔹 Week 3: Off-Heap Persistence & Networking
+*   **Day 1-3:** Integrate `Chronicle Map` to asynchronously persist active order book states straight to disk without blocking the main execution path.
+*   **Day 4-6:** Build the `gRPC` server to accept high-speed external trade requests and stream live market data snapshots to clients.
+*   **Day 7:** Implement connection pooling policies and custom backpressure streaming controls.
 
-### 🚀 Quick Start (Easiest Way)
-We've included simple scripts to build and start the engine in a single step:
-
-- **Windows:** Double-click `run.bat` or run it from your command line.
-- **Mac/Linux:** Open a terminal and run `./run.sh` (you may need to run `chmod +x run.sh` first).
-
-This will automatically build the project and launch the trading engine. You will see logs indicating that the engine is ready and accepting requests.
-
-### Building the Project
-```bash
-mvn clean package
-```
-
-### Running with Docker
-```bash
-docker-compose up --build
-```
-
-### Benchmarking
-To run the JMH performance benchmarks:
-```bash
-mvn clean install
-java -jar benchmarking-module/target/benchmarks.jar
-```
-
-## JVM Tuning for Low Latency
-
-The engine is optimized for **ZGC** to minimize pause times.
-
-Recommended JVM Flags:
-```text
--XX:+UseZGC 
--XX:+ZGenerational 
--XX:+UseLargePages 
--XX:+AlwaysPreTouch 
--Xms4g -Xmx4g 
--XX:MaxDirectMemorySize=2g
--XX:ThreadStackSize=256k
-```
-
-## API Documentation
-
-### gRPC Endpoints
-- `SubmitOrder`: Place a new LIMIT, MARKET, or IOC order.
-- `CancelOrder`: Cancel an existing order by ID.
-- `StreamMarketData`: Bi-directional stream for real-time order book updates and trades.
-
-### Metrics
-Exposed via Spring Boot Actuator at `http://localhost:8080/actuator/prometheus`.
-- `trading.engine.matching.latency`: Timer for matching logic.
-- `trading.engine.orders.count`: Total orders processed.
-- `trading.engine.trades.count`: Total trades executed.
-
-## License
-MIT
+### 🔹 Week 4: Benchmarking & JVM Tuning
+*   **Day 1-3:** Conduct exhaustive micro-benchmarks with `JMH` to find bottlenecks, and optimize CPU cache line padding (`@Contended`) to prevent performance-killing false sharing.
+*   **Day 4-5:** Fine-tune modern garbage collectors (`ZGC` / `Shenandoah`) for ultra-low-latency real-time processing profiles.
+*   **Day 6-7:** Finalize robust production deployment scripts, metrics monitoring hooks (`JMX`/`Prometheus`), and release technical specifications.
