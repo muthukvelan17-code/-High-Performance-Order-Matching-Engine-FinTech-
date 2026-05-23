@@ -59,6 +59,7 @@ public class TradingEngine {
         disruptor.getRingBuffer().publishEvent((event, sequence) -> {
             event.clear();
             event.setCancelOrderId(orderId);
+            event.setOrder(com.trading.engine.core.model.Order.builder().orderId(orderId).symbol(symbol).build());
             event.setEventType(OrderEvent.EventType.CANCEL_ORDER);
         });
     }

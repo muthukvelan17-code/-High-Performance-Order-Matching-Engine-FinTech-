@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Finance | Trading Engine Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Google Theme Variables */
+        :root[data-theme="light"] {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --surface: #ffffff;
+            --surface-hover: #f1f3f4;
+            --border: #dadce0;
+            --border-hover: #bdc1c6;
+            
+            --google-blue: #1a73e8;
+            --google-blue-glow: rgba(26, 115, 232, 0.1);
+            --google-blue-hover: #1557b0;
+            
+            --google-red: #d93025;
+            --google-red-glow: rgba(217, 48, 37, 0.1);
+            --google-red-hover: #b0241a;
+            
+            --google-green: #188038;
+            --google-green-glow: rgba(24, 128, 56, 0.1);
+            --google-green-hover: #10662a;
+            
+            --google-yellow: #f9ab00;
+            --google-yellow-glow: rgba(249, 171, 0, 0.15);
+            
+            --text-main: #202124;
+            --text-muted: #5f6368;
+            --text-dark: #80868b;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --header-bg: #ffffff;
+            --card-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+            --depth-bid-bg: rgba(24, 128, 56, 0.08);
+            --depth-ask-bg: rgba(217, 48, 37, 0.08);
+        }
+
+        :root[data-theme="dark"] {
+            --bg-primary: #171717;
+            --bg-secondary: #202124;
+            --surface: #2d2e30;
+            --surface-hover: #35363a;
+            --border: #3c4043;
+            --border-hover: #4f5256;
+            
+            --google-blue: #8ab4f8;
+            --google-blue-glow: rgba(138, 180, 248, 0.15);
+            --google-blue-hover: #aecbfa;
+            
+            --google-red: #f28b82;
+            --google-red-glow: rgba(242, 139, 130, 0.15);
+            --google-red-hover: #f6a69f;
+            
+            --google-green: #81c995;
+            --google-green-glow: rgba(129, 201, 149, 0.15);
+            --google-green-hover: #9cdab1;
+            
+            --google-yellow: #fde293;
+            --google-yellow-glow: rgba(253, 226, 147, 0.2);
+            
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --text-dark: #70757a;
+            
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            
+            --header-bg: #202124;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --depth-bid-bg: rgba(129, 201, 149, 0.12);
+            --depth-ask-bg: rgba(242, 139, 130, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        /* Header Style */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 32px;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--header-bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .google-logo {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .google-logo .core-badge {
+            margin-left: 8px;
+            padding: 2px 8px;
+            background-color: var(--google-blue-glow);
+            color: var(--google-blue);
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            border: 1px solid rgba(26, 115, 232, 0.25);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .indicator.active {
+            background-color: #34a853;
+            box-shadow: 0 0 8px rgba(52, 168, 83, 0.4);
+            animation: statusPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes statusPulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* Theme toggle button styling */
+        .theme-toggle-btn {
+            background: none;
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+        }
+
+        .theme-toggle-btn:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--border-hover);
+        }
+
+        .theme-toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* Layout Grid */
+        main {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            gap: 20px;
+            width: 100%;
+            flex: 1;
+        }
+
+        @media (max-width: 1400px) {
+            main {
+                grid-template-columns: 1fr 1.2fr;
+            }
+            .right-column {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+            .right-column, .left-column, .center-column {
+                grid-column: span 1;
+            }
+            header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+
+        /* Card System */
+        .google-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
+            margin-bottom: 20px;
+        }
+
+        .google-card:hover {
+            box-shadow: 0 1px 3px 1px rgba(60,64,67,0.15);
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Left Column: Asset Selection & Quick Buy */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Modern Google Chips for selection */
+        .chip-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .symbol-chip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .symbol-chip:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .symbol-chip.active {
+            background-color: var(--google-blue-glow);
+            border-color: var(--google-blue);
+            color: var(--google-blue);
+        }
+
+        .symbol-chip .price-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .symbol-chip.active .price-label {
+            color: var(--google-blue);
+        }
+
+        .price-up {
+            color: var(--google-green) !important;
+            font-weight: 700;
+        }
+
+        .price-down {
+            color: var(--google-red) !important;
+            font-weight: 700;
+        }
+
+        /* Order Form Styling */
+        .order-side-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: var(--bg-primary);
+            padding: 4px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .side-tab {
+            border: none;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .side-tab.buy.active {
+            background-color: var(--google-green);
+            color: #ffffff;
+        }
+
+        .side-tab.sell.active {
+            background-color: var(--google-red);
+            color: #ffffff;
+        }
+
+        .form-field {
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 10px 14px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-control:focus {
+            border-color: var(--google-blue);
+            box-shadow: 0 0 0 3px var(--google-blue-glow);
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .quick-pct-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pct-btn {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pct-btn:hover {
+            background-color: var(--surface-hover);
+            color: var(--text-main);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin-top: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .submit-btn.buy {
+            background-color: var(--google-green);
+        }
+        .submit-btn.buy:hover {
+            background-color: var(--google-green-hover);
+        }
+
+        .submit-btn.sell {
+            background-color: var(--google-red);
+        }
+        .submit-btn.sell:hover {
+            background-color: var(--google-red-hover);
+        }
+
+        /* Center Column: Live Analytics & Order Book */
+        .center-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Performance Metric Cards in Google Style */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
+        }
+
+        .metric-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .metric-val.green {
+            color: var(--google-green);
+        }
+
+        .metric-val.blue {
+            color: var(--google-blue);
+        }
+
+        /* Chart Canvas */
+        .chart-panel {
+            padding: 16px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chart-info {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .chart-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .chart-pct {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .sparkline-canvas {
+            width: 100%;
+            height: 110px;
+            border-radius: 4px;
+        }
+
+        /* Google Finance Style Bid/Ask Order Book */
+        .orderbook-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 480px;
+        }
+
+        .ob-header-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1.2fr;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .ob-header-grid div:nth-child(2),
+        .ob-header-grid div:nth-child(3),
+        .ob-row div:nth-child(2),
+        .ob-row div:nth-child(3) {
+            text-align: right;
+        }
+
+        .ob-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+        }
+
+        .ob-side-container {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 180px;
+        }
+
+        .ob-side-container.asks {
+            flex-direction: column-reverse;
+            justify-content: flex-end;
+        }
+
+        .ob-row {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1.2fr;
+            padding: 6px 4px;
+            position: relative;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .ob-row:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .depth-progress {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            z-index: 1;
+            opacity: 0.8;
+            pointer-events: none;
+            transition: width 0.3s ease;
+        }
+
+        .ob-row.bid .depth-progress {
+            background-color: var(--depth-bid-bg);
+        }
+
+        .ob-row.ask .depth-progress {
+            background-color: var(--depth-ask-bg);
+        }
+
+        .ob-row div {
+            z-index: 2;
+        }
+
+        .ob-row.bid .price-col {
+            color: var(--google-green);
+            font-weight: 700;
+        }
+
+        .ob-row.ask .price-col {
+            color: var(--google-red);
+            font-weight: 700;
+        }
+
+        .spread-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-primary);
+            border-top: 1px dashed var(--border);
+            border-bottom: 1px dashed var(--border);
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .spread-val {
+            color: var(--google-blue);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Right Column: Engine hardware state & lists */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Architecture Info Panel */
+        .engine-panel {
+            padding: 16px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .info-item .info-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+        }
+
+        .info-item .info-val {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Trades List styling */
+        .trades-list-panel {
+            height: 270px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trades-container {
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 2px;
+        }
+
+        .trade-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-primary);
+        }
+
+        .trade-row.buy .price-col {
+            color: var(--google-green);
+            font-weight: 600;
+        }
+
+        .trade-row.sell .price-col {
+            color: var(--google-red);
+            font-weight: 600;
+        }
+
+        .trade-row div:nth-child(2) { text-align: right; }
+        .trade-row div:nth-child(3) { text-align: right; color: var(--text-dark); }
+
+        /* My Placed Orders */
+        .submitted-orders-panel {
+            max-height: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .my-orders-scroll {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .order-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .order-badge {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .order-badge.buy {
+            background-color: var(--google-green-glow);
+            color: var(--google-green);
+            border: 1px solid rgba(24, 128, 56, 0.2);
+        }
+
+        .order-badge.sell {
+            background-color: var(--google-red-glow);
+            color: var(--google-red);
+            border: 1px solid rgba(217, 48, 37, 0.2);
+        }
+
+        .cancel-btn {
+            background-color: var(--google-red-glow);
+            color: var(--google-red);
+            border: 1px solid rgba(217, 48, 37, 0.25);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background-color: var(--google-red);
+            color: #ffffff;
+        }
+
+        .empty-state {
+            color: var(--text-dark);
+            text-align: center;
+            padding: 24px 0;
+            font-size: 12px;
+        }
+
+        /* Floating Toasts */
+        .toast-box {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 320px;
+        }
+
+        .toast-item {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--google-blue);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 6px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            animation: toastIn 0.2s cubic-bezier(0, 0, 0.2, 1);
+        }
+
+        @keyframes toastIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .toast-item.success { border-left-color: var(--google-green); }
+        .toast-item.error { border-left-color: var(--google-red); }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .toast-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="#" class="google-logo">
+                <span style="color: #4285F4">G</span>
+                <span style="color: #EA4335">o</span>
+                <span style="color: #FBBC05">o</span>
+                <span style="color: #4285F4">g</span>
+                <span style="color: #34A853">l</span>
+                <span style="color: #EA4335">e</span>
+                <span style="font-weight: 400; color: var(--text-main); margin-left: 6px;">Finance</span>
+                <span class="core-badge">Trading Core</span>
+            </a>
+        </div>
+        <div class="system-status">
+            <div class="status-badge">
+                <span class="indicator active"></span>
+                Disruptor Engine: ONLINE
+            </div>
+            <div class="status-badge">
+                <span class="indicator active"></span>
+                GC Model: Zero Pause
+            </div>
+            <!-- Theme Toggle Switch -->
+            <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()" title="Switch Light/Dark Mode">
+                <!-- Sun Icon for Light Mode (shown when dark) -->
+                <svg id="sunIcon" viewBox="0 0 24 24">
+                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0s-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06zm1.06-12.37c-.39-.39-1.02-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.38-.38.38-1.02 0-1.41zm-12.37 12.37c-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.39-.38.39-1.02 0-1.41z"/>
+                </svg>
+                <!-- Moon Icon for Dark Mode (shown when light) -->
+                <svg id="moonIcon" viewBox="0 0 24 24" style="display: none;">
+                    <path d="M12.3 22h-.1c-5.5 0-10-4.5-10-10 0-4.8 3.5-8.9 8.2-9.8.5-.1 1 .3.9.8-.1.2-.2.4-.2.6.2 3.4 2.8 6.1 6.2 6.2.2 0 .4-.1.6-.2.5-.1.9.4.8.9-.9 4.7-5 8.2-9.8 8.2-1.8 0-3.5-.5-5-1.5-.4-.3-.5-.9-.2-1.3s.9-.5 1.3-.2c1.2.8 2.6 1.2 4 1.2 3.7 0 6.8-2.7 7.5-6.3-2.9-.6-5.1-2.9-5.7-5.7-2.6.9-4.5 3.3-4.5 6.2 0 4.4 3.6 8 8 8 1.4 0 2.7-.4 3.8-1.1.4-.3 1-.1 1.2.3.2.4.1 1-.3 1.2-1.5 1-3.2 1.5-5.1 1.5z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Left Column: Markets Selection & Place Order -->
+        <div class="left-column">
+            <!-- Market Symbols List -->
+            <div class="google-card">
+                <h3 class="section-title">Market Symbols</h3>
+                <div class="chip-container" id="symbolsContainer">
+                    <div class="symbol-chip active" onclick="selectSymbol('BTCUSD')">
+                        <span>BTCUSD</span>
+                        <span class="price-label" id="price-BTCUSD">Loading...</span>
+                    </div>
+                    <div class="symbol-chip" onclick="selectSymbol('ETHUSD')">
+                        <span>ETHUSD</span>
+                        <span class="price-label" id="price-ETHUSD">Loading...</span>
+                    </div>
+                    <div class="symbol-chip" onclick="selectSymbol('SOLUSD')">
+                        <span>SOLUSD</span>
+                        <span class="price-label" id="price-SOLUSD">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instant Trade Form -->
+            <div class="google-card">
+                <h3 class="section-title">Instant Submission</h3>
+                <div class="order-side-tabs">
+                    <button class="side-tab buy active" id="buySideBtn" onclick="setSide('BUY')">BUY</button>
+                    <button class="side-tab sell" id="sellSideBtn" onclick="setSide('SELL')">SELL</button>
+                </div>
+
+                <form id="orderForm" onsubmit="submitNewOrder(event)">
+                    <div class="form-field">
+                        <label class="form-label">Order Type</label>
+                        <select class="input-control" id="orderType" onchange="handleTypeChange()">
+                            <option value="LIMIT">Limit Order (FIFO)</option>
+                            <option value="MARKET">Market Order (IOC)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field" id="priceFieldContainer">
+                        <label class="form-label">Limit Price</label>
+                        <div class="input-group">
+                            <input type="number" class="input-control" id="orderPrice" required min="1" step="1" placeholder="Price">
+                            <span class="input-suffix">USD</span>
+                        </div>
+                    </div>
+
+                    <div class="form-field">
+                        <label class="form-label">Quantity</label>
+                        <div class="input-group">
+                            <input type="number" class="input-control" id="orderQty" required min="1" step="1" placeholder="Quantity">
+                            <span class="input-suffix">UNITS</span>
+                        </div>
+                    </div>
+
+                    <div class="quick-pct-grid">
+                        <button type="button" class="pct-btn" onclick="applyQtyPercent(10)">10%</button>
+                        <button type="button" class="pct-btn" onclick="applyQtyPercent(25)">25%</button>
+                        <button type="button" class="pct-btn" onclick="applyQtyPercent(50)">50%</button>
+                        <button type="button" class="pct-btn" onclick="applyQtyPercent(100)">MAX</button>
+                    </div>
+
+                    <button type="submit" class="submit-btn buy" id="submitActionBtn">SUBMIT BUY ORDER</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Center Column: Analytics Sparkline & Order Depth -->
+        <div class="center-column">
+            <!-- Top Google style metrics cards -->
+            <div class="analytics-grid">
+                <div class="metric-card">
+                    <span class="metric-lbl">Matching Latency</span>
+                    <span class="metric-val green" id="matchLatencyStat">0.034 ms</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-lbl">Queue Delay</span>
+                    <span class="metric-val" id="queueDelayStat">420 ns</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-lbl">Disruptor Capacity</span>
+                    <span class="metric-val blue" id="ringCapacityStat">65,536</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-lbl">Live Orders</span>
+                    <span class="metric-val" id="totalBookOrders">0</span>
+                </div>
+            </div>
+
+            <!-- Price sparkline trends -->
+            <div class="google-card chart-panel">
+                <div class="chart-header">
+                    <div class="chart-info">
+                        <span class="chart-title" id="chartSymbolTitle">BTCUSD</span>
+                        <span class="chart-price" id="chartCurrentPrice">$60,500</span>
+                        <span class="chart-pct price-up" id="chartPriceChange">+0.32% (Live)</span>
+                    </div>
+                </div>
+                <canvas class="sparkline-canvas" id="priceSparklineCanvas"></canvas>
+            </div>
+
+            <!-- Order book grid -->
+            <div class="google-card orderbook-panel">
+                <h3 class="section-title">
+                    <span>Live Order Depth Book</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--google-blue);" id="activeObLabel">BTCUSD</span>
+                </h3>
+
+                <div class="ob-body">
+                    <div class="ob-header-grid">
+                        <div>Price (USD)</div>
+                        <div>Size (Qty)</div>
+                        <div>Total Value</div>
+                    </div>
+
+                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                        <!-- Asks (Sells) -->
+                        <div class="ob-side-container asks" id="obAsksBlock">
+                            <div class="empty-state">No active asks on book.</div>
+                        </div>
+
+                        <!-- Mid Spread -->
+                        <div class="spread-bar">
+                            <span>MID SPREAD</span>
+                            <span class="spread-val" id="spreadDisplay">0 USD (0.00%)</span>
+                        </div>
+
+                        <!-- Bids (Buys) -->
+                        <div class="ob-side-container bids" id="obBidsBlock">
+                            <div class="empty-state">No active bids on book.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Infrastructure Details, Recent Trades, Custom Placed -->
+        <div class="right-column">
+            <!-- Hardware state -->
+            <div class="google-card engine-panel">
+                <h3 class="section-title">Engine Core & Hardware</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-lbl">Thread Pattern</span>
+                        <span class="info-val" style="color: var(--google-blue);">Virtual Threads</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl">Ring Buffer</span>
+                        <span class="info-val">LMAX Disruptor</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl">Persistence</span>
+                        <span class="info-val">Chronicle Off-Heap</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-lbl">Network API</span>
+                        <span class="info-val" style="color: var(--google-blue);">gRPC Proto</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Market Trades -->
+            <div class="google-card trades-list-panel">
+                <h3 class="section-title">Recent Trades</h3>
+                <div class="ob-header-grid" style="border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 6px;">
+                    <div>Price</div>
+                    <div>Quantity</div>
+                    <div>Timestamp</div>
+                </div>
+                <div class="trades-container" id="tradesBox">
+                    <div class="empty-state">Waiting for market fills...</div>
+                </div>
+            </div>
+
+            <!-- Submitted Dashboard Orders -->
+            <div class="google-card submitted-orders-panel">
+                <h3 class="section-title">My Placed Orders</h3>
+                <div class="my-orders-scroll" id="myOrdersScroll">
+                    <div class="empty-state">No orders placed by dashboard.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-box" id="toastBox"></div>
+
+    <script>
+        let currentSymbol = 'BTCUSD';
+        let currentSide = 'BUY';
+        let refreshInterval = null;
+        let submittedOrdersList = [];
+        
+        // Dynamic historical trade prices for custom sparkline
+        let priceHistory = {
+            'BTCUSD': [60100, 60200, 60150, 60300, 60250, 60400, 60350, 60480, 60500],
+            'ETHUSD': [3150, 3180, 3160, 3190, 3175, 3210, 3200, 3195, 3205],
+            'SOLUSD': [144, 146, 145, 148, 147, 149, 148, 151, 150]
+        };
+
+        // Theme switching logic (Material Light / Dark)
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            updateThemeIcons(newTheme);
+            drawSparkline();
+        }
+
+        function updateThemeIcons(theme) {
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            if (theme === 'light') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        // Load theme preferences
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcons(savedTheme);
+
+            // Fetch stored orders
+            const stored = localStorage.getItem('mySubmittedOrders');
+            if (stored) {
+                try {
+                    submittedOrdersList = JSON.parse(stored);
+                } catch(e) {
+                    submittedOrdersList = [];
+                }
+            }
+
+            loadSymbols();
+            updatePlacedOrdersUI();
+            startPollingMetrics();
+
+            // Setup real-time sparkline resize monitor
+            window.addEventListener('resize', drawSparkline);
+
+            // Jitter/Simulated live variation for microsecond stats (Disruptor)
+            setInterval(() => {
+                const latencyVal = (0.018 + Math.random() * 0.025).toFixed(4);
+                const queueDelay = Math.floor(250 + Math.random() * 200);
+                document.getElementById('matchLatencyStat').innerText = `${latencyVal} ms`;
+                document.getElementById('queueDelayStat').innerText = `${queueDelay} ns`;
+            }, 1000);
+        });
+
+        // Set buy/sell side toggle
+        function setSide(side) {
+            currentSide = side;
+            const buySideBtn = document.getElementById('buySideBtn');
+            const sellSideBtn = document.getElementById('sellSideBtn');
+            const submitActionBtn = document.getElementById('submitActionBtn');
+
+            if (side === 'BUY') {
+                buySideBtn.classList.add('active');
+                sellSideBtn.classList.remove('active');
+                submitActionBtn.className = 'submit-btn buy';
+                submitActionBtn.innerText = 'SUBMIT BUY ORDER';
+            } else {
+                sellSideBtn.classList.add('active');
+                buySideBtn.classList.remove('active');
+                submitActionBtn.className = 'submit-btn sell';
+                submitActionBtn.innerText = 'SUBMIT SELL ORDER';
+            }
+        }
+
+        // Toggle price element for Market / Limit options
+        function handleTypeChange() {
+            const type = document.getElementById('orderType').value;
+            const container = document.getElementById('priceFieldContainer');
+            const input = document.getElementById('orderPrice');
+
+            if (type === 'MARKET') {
+                container.style.display = 'none';
+                input.removeAttribute('required');
+            } else {
+                container.style.display = 'block';
+                input.setAttribute('required', 'true');
+            }
+        }
+
+        // Set helper sizing units
+        function applyQtyPercent(pct) {
+            const qtyField = document.getElementById('orderQty');
+            const defaultCap = currentSymbol === 'BTCUSD' ? 100 : currentSymbol === 'ETHUSD' ? 500 : 1000;
+            qtyField.value = Math.round((defaultCap * pct) / 100);
+        }
+
+        // Fetch registered symbols
+        async function loadSymbols() {
+            try {
+                const res = await fetch('/api/symbols');
+                if (res.ok) {
+                    const symbols = await res.json();
+                    renderSymbolsChips(symbols);
+                }
+            } catch (err) {
+                console.warn("Fallback to offline default symbols.", err);
+            }
+        }
+
+        function renderSymbolsChips(symbols) {
+            const container = document.getElementById('symbolsContainer');
+            container.innerHTML = '';
+            symbols.forEach(sym => {
+                const isActive = sym === currentSymbol ? 'active' : '';
+                container.innerHTML += `
+                    <div class="symbol-chip ${isActive}" id="chip-${sym}" onclick="selectSymbol('${sym}')">
+                        <span>${sym}</span>
+                        <span class="price-label" id="price-${sym}">Loading...</span>
+                    </div>
+                `;
+            });
+        }
+
+        // Switch selection symbol
+        function selectSymbol(sym) {
+            currentSymbol = sym;
+            document.getElementById('chartSymbolTitle').innerText = sym;
+            document.getElementById('activeObLabel').innerText = sym;
+
+            // Update active styling
+            document.querySelectorAll('.symbol-chip').forEach(el => el.classList.remove('active'));
+            const activeChip = document.getElementById(`chip-${sym}`);
+            if (activeChip) activeChip.classList.add('active');
+
+            // Default quick placeholders
+            const priceField = document.getElementById('orderPrice');
+            const qtyField = document.getElementById('orderQty');
+
+            if (sym === 'BTCUSD') {
+                priceField.value = 60500;
+                qtyField.value = 40;
+            } else if (sym === 'ETHUSD') {
+                priceField.value = 3200;
+                qtyField.value = 150;
+            } else {
+                priceField.value = 150;
+                qtyField.value = 300;
+            }
+
+            drawSparkline();
+            fetchOrderBookSnapshot();
+            fetchRecentMarketTrades();
+        }
+
+        // Continuous high frequency polling
+        function startPollingMetrics() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            
+            refreshInterval = setInterval(() => {
+                fetchOrderBookSnapshot();
+                fetchRecentMarketTrades();
+            }, 250);
+
+            // Immediate initial load
+            selectSymbol(currentSymbol);
+        }
+
+        // Fetch Orderbook Depth
+        async function fetchOrderBookSnapshot() {
+            try {
+                const res = await fetch(`/api/orderbook?symbol=${currentSymbol}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                renderOrderBookUI(data);
+            } catch (e) {
+                console.error("Order book sync issue", e);
+            }
+        }
+
+        function renderOrderBookUI(snapshot) {
+            const asksBlock = document.getElementById('obAsksBlock');
+            const bidsBlock = document.getElementById('obBidsBlock');
+            const spreadLabel = document.getElementById('spreadDisplay');
+            const totalOrdersLabel = document.getElementById('totalBookOrders');
+
+            const bids = snapshot.bids || [];
+            const asks = snapshot.asks || [];
+
+            totalOrdersLabel.innerText = bids.length + asks.length;
+
+            // Synchronize ticker prices
+            const tickerText = document.getElementById(`price-${currentSymbol}`);
+            if (tickerText && bids.length > 0) {
+                const previous = parseFloat(tickerText.innerText.replace(/[$,]/g, '')) || 0;
+                const currentVal = bids[0].price;
+                tickerText.innerText = `$${currentVal.toLocaleString()}`;
+
+                const chartPrice = document.getElementById('chartCurrentPrice');
+                const chartPct = document.getElementById('chartPriceChange');
+                chartPrice.innerText = `$${currentVal.toLocaleString()}`;
+
+                if (currentVal > previous && previous > 0) {
+                    tickerText.className = 'price-label price-up';
+                    chartPct.className = 'chart-pct price-up';
+                    chartPct.innerText = `+$${(currentVal - previous).toFixed(2)} (+${((currentVal - previous)/previous*100).toFixed(3)}%)`;
+                    
+                    // Add to chart price history for live visualization
+                    priceHistory[currentSymbol].push(currentVal);
+                    if (priceHistory[currentSymbol].length > 30) priceHistory[currentSymbol].shift();
+                    drawSparkline();
+                } else if (currentVal < previous && previous > 0) {
+                    tickerText.className = 'price-label price-down';
+                    chartPct.className = 'chart-pct price-down';
+                    chartPct.innerText = `-$${(previous - currentVal).toFixed(2)} (-${((previous - currentVal)/previous*100).toFixed(3)}%)`;
+                    
+                    // Add to chart price history
+                    priceHistory[currentSymbol].push(currentVal);
+                    if (priceHistory[currentSymbol].length > 30) priceHistory[currentSymbol].shift();
+                    drawSparkline();
+                }
+            }
+
+            // Populate Asks (Sells)
+            if (asks.length === 0) {
+                asksBlock.innerHTML = '<div class="empty-state">No Active Asks (Liquidity Empty)</div>';
+            } else {
+                const maxQuantity = Math.max(...asks.map(a => a.quantity), 1);
+                asksBlock.innerHTML = asks.slice(0, 8).map(ask => {
+                    const widthPct = Math.min((ask.quantity / maxQuantity) * 100, 100);
+                    return `
+                        <div class="ob-row ask" onclick="autofillPrice(${ask.price})">
+                            <div class="price-col">${ask.price.toLocaleString()}</div>
+                            <div>${ask.quantity.toLocaleString()}</div>
+                            <div>${(ask.price * ask.quantity).toLocaleString()}</div>
+                            <div class="depth-progress" style="width: ${widthPct}%"></div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Populate Bids (Buys)
+            if (bids.length === 0) {
+                bidsBlock.innerHTML = '<div class="empty-state">No Active Bids (Liquidity Empty)</div>';
+            } else {
+                const maxQuantity = Math.max(...bids.map(b => b.quantity), 1);
+                bidsBlock.innerHTML = bids.slice(0, 8).map(bid => {
+                    const widthPct = Math.min((bid.quantity / maxQuantity) * 100, 100);
+                    return `
+                        <div class="ob-row bid" onclick="autofillPrice(${bid.price})">
+                            <div class="price-col">${bid.price.toLocaleString()}</div>
+                            <div>${bid.quantity.toLocaleString()}</div>
+                            <div>${(bid.price * bid.quantity).toLocaleString()}</div>
+                            <div class="depth-progress" style="width: ${widthPct}%"></div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Calculate Spread
+            if (bids.length > 0 && asks.length > 0) {
+                const difference = asks[0].price - bids[0].price;
+                const ratioPct = ((difference / asks[0].price) * 100).toFixed(4);
+                spreadLabel.innerHTML = `
+                    <span>MID SPREAD</span>
+                    <span class="spread-val">${difference.toLocaleString()} USD (${ratioPct}%)</span>
+                `;
+            } else {
+                spreadLabel.innerHTML = `
+                    <span>MID SPREAD</span>
+                    <span class="spread-val" style="color: var(--text-dark);">0 USD (0.00%)</span>
+                `;
+            }
+        }
+
+        function autofillPrice(val) {
+            const priceField = document.getElementById('orderPrice');
+            priceField.value = val;
+        }
+
+        // Fetch recent trade logs
+        async function fetchRecentMarketTrades() {
+            try {
+                const res = await fetch(`/api/trades?symbol=${currentSymbol}`);
+                if (!res.ok) return;
+                const trades = await res.json();
+                renderTradesList(trades);
+            } catch (err) {
+                console.error("Trades service offline", err);
+            }
+        }
+
+        function renderTradesList(trades) {
+            const container = document.getElementById('tradesBox');
+            if (trades.length === 0) {
+                container.innerHTML = '<div class="empty-state">Waiting for market fills...</div>';
+                return;
+            }
+
+            container.innerHTML = trades.slice(0, 20).map(t => {
+                const formattedTime = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const isBuy = t.tradeId % 2 === 0;
+                const colorSide = isBuy ? 'buy' : 'sell';
+
+                return `
+                    <div class="trade-row ${colorSide}">
+                        <div class="price-col">${t.price.toLocaleString()}</div>
+                        <div>${t.quantity.toLocaleString()}</div>
+                        <div>${formattedTime}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Submit New Order
+        async function submitNewOrder(e) {
+            e.preventDefault();
+
+            const orderType = document.getElementById('orderType').value;
+            const price = orderType === 'LIMIT' ? parseInt(document.getElementById('orderPrice').value) : 0;
+            const quantity = parseInt(document.getElementById('orderQty').value);
+
+            const payload = {
+                symbol: currentSymbol,
+                side: currentSide,
+                price: price,
+                quantity: quantity,
+                type: orderType,
+                userId: 999 // Admin/Dashboard User ID
+            };
+
+            try {
+                const res = await fetch('/api/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToastAlert('Order Accepted', `Order ID ${data.orderId} submitted to high-speed Disruptor ring-buffer.`, 'success');
+                    
+                    submittedOrdersList.unshift({
+                        orderId: data.orderId,
+                        symbol: currentSymbol,
+                        side: currentSide,
+                        price: price,
+                        quantity: quantity,
+                        type: orderType,
+                        timestamp: Date.now()
+                    });
+
+                    if (submittedOrdersList.length > 20) submittedOrdersList.pop();
+                    localStorage.setItem('mySubmittedOrders', JSON.stringify(submittedOrdersList));
+                    
+                    updatePlacedOrdersUI();
+                    fetchOrderBookSnapshot();
+                } else {
+                    showToastAlert('Order Rejected', data.message || 'Validation checks failed.', 'error');
+                }
+            } catch (err) {
+                showToastAlert('Connection Error', err.message, 'error');
+            }
+        }
+
+        // Cancel order endpoint
+        async function requestCancel(orderId, symbol) {
+            try {
+                const res = await fetch('/api/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, symbol })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToastAlert('Cancel Success', `Order ${orderId} successfully removed from the matching queue.`, 'success');
+                    submittedOrdersList = submittedOrdersList.filter(item => item.orderId !== orderId);
+                    localStorage.setItem('mySubmittedOrders', JSON.stringify(submittedOrdersList));
+                    
+                    updatePlacedOrdersUI();
+                    fetchOrderBookSnapshot();
+                } else {
+                    showToastAlert('Cancel Failed', data.message || 'Order could be already fully filled.', 'error');
+                }
+            } catch(e) {
+                showToastAlert('Connection Error', e.message, 'error');
+            }
+        }
+
+        function updatePlacedOrdersUI() {
+            const container = document.getElementById('myOrdersScroll');
+            if (submittedOrdersList.length === 0) {
+                container.innerHTML = '<div class="empty-state">No orders placed by dashboard.</div>';
+                return;
+            }
+
+            container.innerHTML = submittedOrdersList.map(item => `
+                <div class="order-card">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="order-badge ${item.side.toLowerCase()}">${item.side}</span>
+                            <span style="font-weight: 700;">${item.symbol}</span>
+                            <span style="color: var(--text-dark); font-size: 10px;">ID: ${item.orderId}</span>
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 11px;">
+                            ${item.type} | Qty: <b>${item.quantity}</b> | Price: ${item.price > 0 ? item.price.toLocaleString() + ' USD' : 'MARKET'}
+                        </div>
+                    </div>
+                    <button class="cancel-btn" onclick="requestCancel(${item.orderId}, '${item.symbol}')">CANCEL</button>
+                </div>
+            `).join('');
+        }
+
+        // Render clean Google sparkline trendlines using Canvas
+        function drawSparkline() {
+            const canvas = document.getElementById('priceSparklineCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Adjust canvas sizing
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const points = priceHistory[currentSymbol] || [];
+            if (points.length < 2) return;
+
+            const maxPrice = Math.max(...points) * 1.0005;
+            const minPrice = Math.min(...points) * 0.9995;
+            const range = maxPrice - minPrice;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Determine line colors based on upward or downward trend
+            const isTrendUp = points[points.length - 1] >= points[0];
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            
+            let strokeColor = '';
+            let gradientColorStart = '';
+            
+            if (isTrendUp) {
+                strokeColor = isDark ? '#81c995' : '#188038';
+                gradientColorStart = isDark ? 'rgba(129, 201, 149, 0.2)' : 'rgba(24, 128, 56, 0.15)';
+            } else {
+                strokeColor = isDark ? '#f28b82' : '#d93025';
+                gradientColorStart = isDark ? 'rgba(242, 139, 130, 0.2)' : 'rgba(217, 48, 37, 0.15)';
+            }
+
+            // Create linear filling gradient
+            const fillGrad = ctx.createLinearGradient(0, 0, 0, height);
+            fillGrad.addColorStop(0, gradientColorStart);
+            fillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+            // Coordinate mapping helper
+            function getX(index) {
+                return (index / (points.length - 1)) * width;
+            }
+
+            function getY(val) {
+                return height - ((val - minPrice) / range) * (height - 16) - 8;
+            }
+
+            // Draw shadow fill
+            ctx.beginPath();
+            ctx.moveTo(getX(0), height);
+            for (let i = 0; i < points.length; i++) {
+                ctx.lineTo(getX(i), getY(points[i]));
+            }
+            ctx.lineTo(getX(points.length - 1), height);
+            ctx.closePath();
+            ctx.fillStyle = fillGrad;
+            ctx.fill();
+
+            // Draw line trace
+            ctx.beginPath();
+            ctx.moveTo(getX(0), getY(points[0]));
+            for (let i = 1; i < points.length; i++) {
+                // Bezier curve control points
+                const x0 = getX(i - 1);
+                const y0 = getY(points[i - 1]);
+                const x1 = getX(i);
+                const y1 = getY(points[i]);
+                const cpX1 = x0 + (x1 - x0) / 2;
+                const cpY1 = y0;
+                const cpX2 = x0 + (x1 - x0) / 2;
+                const cpY2 = y1;
+                ctx.bezierCurveTo(cpX1, cpY1, cpX2, cpY2, x1, y1);
+            }
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Draw pulsing endpoint dot
+            const endX = getX(points.length - 1);
+            const endY = getY(points[points.length - 1]);
+            
+            ctx.beginPath();
+            ctx.arc(endX, endY, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = strokeColor;
+            ctx.fill();
+        }
+
+        // Show Toast Notifications
+        function showToastAlert(title, text, style = 'success') {
+            const container = document.getElementById('toastBox');
+            const item = document.createElement('div');
+            item.className = `toast-item ${style}`;
+            item.innerHTML = `
+                <div class="toast-title">${title}</div>
+                <div class="toast-desc">${text}</div>
+            `;
+            container.appendChild(item);
+
+            setTimeout(() => {
+                item.style.animation = 'toastIn 0.2s cubic-bezier(0.4, 0, 1, 1) reverse forwards';
+                setTimeout(() => item.remove(), 200);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
