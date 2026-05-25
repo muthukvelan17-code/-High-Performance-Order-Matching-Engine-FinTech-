@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,15 +9,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
     
-    <style>
-        /* Google Theme Variables */
+        /* Google Finance Green & Red Theme Variables */
         :root[data-theme="light"] {
-            --bg-primary: #f8f9fa;
+            --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
             --surface: #ffffff;
-            --surface-hover: #f1f3f4;
-            --border: #dadce0;
-            --border-hover: #bdc1c6;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
             
             --google-blue: #1a73e8;
             --google-blue-glow: rgba(26, 115, 232, 0.1);
@@ -25,36 +24,36 @@
             
             --google-red: #d93025;
             --google-red-glow: rgba(217, 48, 37, 0.1);
-            --google-red-hover: #b0241a;
+            --google-red-hover: #b02017;
             
             --google-green: #188038;
             --google-green-glow: rgba(24, 128, 56, 0.1);
-            --google-green-hover: #10662a;
+            --google-green-hover: #13652b;
             
             --google-yellow: #f9ab00;
             --google-yellow-glow: rgba(249, 171, 0, 0.15);
             
-            --text-main: #202124;
-            --text-muted: #5f6368;
-            --text-dark: #80868b;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --text-dark: #64748b;
             
-            --shadow-sm: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(26, 115, 232, 0.05), 0 4px 6px -4px rgba(26, 115, 232, 0.05);
             
             --header-bg: #ffffff;
-            --card-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+            --card-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.12), 0 2px 8px -1px rgba(148, 163, 184, 0.08);
             --depth-bid-bg: rgba(24, 128, 56, 0.08);
             --depth-ask-bg: rgba(217, 48, 37, 0.08);
         }
 
         :root[data-theme="dark"] {
-            --bg-primary: #171717;
-            --bg-secondary: #202124;
-            --surface: #2d2e30;
-            --surface-hover: #35363a;
-            --border: #3c4043;
-            --border-hover: #4f5256;
+            --bg-primary: #0b0f19;
+            --bg-secondary: #111827;
+            --surface: #1f2937;
+            --surface-hover: #374151;
+            --border: #1f2937;
+            --border-hover: #374151;
             
             --google-blue: #8ab4f8;
             --google-blue-glow: rgba(138, 180, 248, 0.15);
@@ -62,25 +61,25 @@
             
             --google-red: #f28b82;
             --google-red-glow: rgba(242, 139, 130, 0.15);
-            --google-red-hover: #f6a69f;
+            --google-red-hover: #f6aea9;
             
             --google-green: #81c995;
             --google-green-glow: rgba(129, 201, 149, 0.15);
-            --google-green-hover: #9cdab1;
+            --google-green-hover: #a8dab5;
             
-            --google-yellow: #fde293;
-            --google-yellow-glow: rgba(253, 226, 147, 0.2);
+            --google-yellow: #fdd663;
+            --google-yellow-glow: rgba(253, 214, 99, 0.2);
             
-            --text-main: #e8eaed;
-            --text-muted: #9aa0a6;
-            --text-dark: #70757a;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --text-dark: #6b7280;
             
             --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
             
-            --header-bg: #202124;
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --header-bg: #111827;
+            --card-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
             --depth-bid-bg: rgba(129, 201, 149, 0.12);
             --depth-ask-bg: rgba(242, 139, 130, 0.12);
         }
@@ -875,12 +874,7 @@
     <header>
         <div class="header-left">
             <a href="#" class="google-logo">
-                <span style="color: #4285F4">G</span>
-                <span style="color: #EA4335">o</span>
-                <span style="color: #FBBC05">o</span>
-                <span style="color: #4285F4">g</span>
-                <span style="color: #34A853">l</span>
-                <span style="color: #EA4335">e</span>
+                <span style="background: linear-gradient(135deg, var(--google-blue) 0%, var(--google-green) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; font-family: 'Outfit', sans-serif;">Google</span>
                 <span style="font-weight: 400; color: var(--text-main); margin-left: 6px;">Finance</span>
                 <span class="core-badge">Trading Core</span>
             </a>
@@ -1134,7 +1128,7 @@
 
         // Load theme preferences
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             updateThemeIcons(savedTheme);
 

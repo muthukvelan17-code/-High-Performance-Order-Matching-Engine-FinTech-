@@ -48,7 +48,7 @@ public class TradingEngineWebController {
     }
 
     @GetMapping("/orderbook")
-    public ResponseEntity<OrderBookSnapshot> getOrderBook(@RequestParam String symbol) {
+    public ResponseEntity<OrderBookSnapshot> getOrderBook(@RequestParam("symbol") String symbol) {
         OrderBookSnapshot snapshot = tradingEngine.getOrderBookSnapshot(symbol);
         if (snapshot == null) {
             snapshot = OrderBookSnapshot.builder()
@@ -62,7 +62,7 @@ public class TradingEngineWebController {
     }
 
     @GetMapping("/trades")
-    public ResponseEntity<List<Trade>> getTrades(@RequestParam String symbol) {
+    public ResponseEntity<List<Trade>> getTrades(@RequestParam("symbol") String symbol) {
         List<Trade> trades = marketDataService.getRecentTrades(symbol);
         return ResponseEntity.ok(trades);
     }
