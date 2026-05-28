@@ -16,7 +16,61 @@ import java.io.IOException;
 public class TradingEngineApplication {
 
     public static void main(String[] args) {
+        fixChronicleClasspath();
         SpringApplication.run(TradingEngineApplication.class, args);
+    }
+
+    private static void fixChronicleClasspath() {
+        try {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            java.util.Set<String> paths = new java.util.LinkedHashSet<>();
+            
+            while (cl != null) {
+                if (cl instanceof java.net.URLClassLoader) {
+                    for (java.net.URL url : ((java.net.URLClassLoader) cl).getURLs()) {
+                        try {
+                            paths.add(new java.io.File(url.toURI()).getAbsolutePath());
+                        } catch (Exception e) {
+                            paths.add(url.getPath());
+                        }
+                    }
+                } else {
+                    try {
+                        java.lang.reflect.Method getUrlsMethod = cl.getClass().getMethod("getURLs");
+                        java.net.URL[] urls = (java.net.URL[]) getUrlsMethod.invoke(cl);
+                        if (urls != null) {
+                            for (java.net.URL url : urls) {
+                                try {
+                                    paths.add(new java.io.File(url.toURI()).getAbsolutePath());
+                                } catch (Exception e) {
+                                    paths.add(url.getPath());
+                                }
+                            }
+                        }
+                    } catch (NoSuchMethodException ignored) {
+                    } catch (Exception e) {
+                        // ignore reflection errors
+                    }
+                }
+                cl = cl.getParent();
+            }
+            
+            if (!paths.isEmpty()) {
+                String currentCp = System.getProperty("java.class.path");
+                String separator = java.io.File.pathSeparator;
+                StringBuilder newCp = new StringBuilder(currentCp == null ? "" : currentCp);
+                for (String path : paths) {
+                    if (newCp.length() > 0) {
+                        newCp.append(separator);
+                    }
+                    newCp.append(path);
+                }
+                System.setProperty("java.class.path", newCp.toString());
+                System.out.println("[INFO] Dynamic Classpath Resolver: Appended " + paths.size() + " entries to java.class.path.");
+            }
+        } catch (Exception e) {
+            System.err.println("[WARNING] Failed to automatically fix Chronicle Map classpath: " + e.getMessage());
+        }
     }
 
     @Bean
