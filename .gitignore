@@ -15,3 +15,9 @@ bin/
 .maven_temp/
 maven.zip
 trading-engine-app/data/
+cp.txt
+spring_boot_run.log
+jar_run.log
+.tmp/
+
+

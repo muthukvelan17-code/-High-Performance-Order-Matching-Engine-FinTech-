@@ -10,8 +10,8 @@ if exist ".maven\bin\mvn.cmd" (
     set MAVEN_CMD=.maven\bin\mvn.cmd
 )
 
-echo Compiling the bot...
-call "%MAVEN_CMD%" compile -pl trading-engine-app -am
+:: echo Compiling the bot...
+:: call "%MAVEN_CMD%" compile -pl trading-engine-app -am
 
 echo.
 echo Running the bot...
