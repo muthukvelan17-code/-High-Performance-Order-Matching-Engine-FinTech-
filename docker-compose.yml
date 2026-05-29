@@ -6,6 +6,8 @@ services:
     ports:
       - "9090:9090" # gRPC
       - "8080:8080" # Actuator/Metrics
+    environment:
+      - DATA_DIR=/app/data
     volumes:
       - ./data:/app/data
     deploy:
