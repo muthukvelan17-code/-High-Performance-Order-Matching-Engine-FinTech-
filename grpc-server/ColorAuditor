@@ -1,0 +1,318 @@
+export default function ColorAuditor() {
+  const [textColor, setTextColor] = useState<string>('#1e293b');
+  const [bgColor, setBgColor] = useState<string>('#f8fafc');
+  const [activeBlindness, setActiveBlindness] = useState<string>('normal');
+
+  const contrastRatio = useMemo(() => {
+    return getContrastRatio(textColor, bgColor);
+  }, [textColor, bgColor]);
+
+  const results = useMemo(() => {
+    return {
+      aaNormal: contrastRatio >= 4.5,
+      aaLarge: contrastRatio >= 3.0,
+      aaaNormal: contrastRatio >= 7.0,
+      aaaLarge: contrastRatio >= 4.5,
+    };
+  }, [contrastRatio]);
+
+  const handleApplySwatch = (text: string, bg: string) => {
+    setTextColor(text);
+    setBgColor(bg);
+  };
+
+  const currentBlindnessMatrix = useMemo(() => {
+    const found = COLOR_BLINDNESS_TYPES.find((b) => b.id === activeBlindness);
+    return found ? found.matrix.join(' ') : COLOR_BLINDNESS_TYPES[0].matrix.join(' ');
+  }, [activeBlindness]);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* SVG Color Matrix filters loaded into the DOM */}
+      <svg className="hidden">
+        <defs>
+          <filter id="blindness-filter">
+            <feColorMatrix type="matrix" values={currentBlindnessMatrix} />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Inputs and swatch config */}
+      <div id="inputs-panel" className="lg:col-span-5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 p-6 shadow-sm flex flex-col gap-5">
+        <div>
+          <h3 className="text-sm font-semibold tracking-wide text-neutral-400 dark:text-neutral-500 uppercase flex items-center gap-2">
+            <Palette className="w-4 h-4 text-pink-500" />
+            Contrast Color Picker
+          </h3>
+          <p className="text-xs text-neutral-500 mt-1">
+            Compute real-time mathematical ratios using sRGB relative luminance checks.
+          </p>
+        </div>
+
+        {/* Text color and BG color input slots */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+              Text Color
+            </label>
+            <div className="flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 bg-neutral-50 dark:bg-neutral-950">
+              <input
+                id="input-text-color-picker"
+                type="color"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
+                className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 overflow-hidden shrink-0"
+              />
+              <input
+                id="input-text-color"
+                type="text"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
+                maxLength={7}
+                className="w-full bg-transparent font-mono text-xs uppercase text-neutral-800 dark:text-neutral-200 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+              Background Color
+            </label>
+            <div className="flex items-center gap-2 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2 bg-neutral-50 dark:bg-neutral-950">
+              <input
+                id="input-bg-color-picker"
+                type="color"
+                value={bgColor}
+                onChange={(e) => setBgColor(e.target.value)}
+                className="w-8 h-8 rounded-lg cursor-pointer border-0 p-0 overflow-hidden shrink-0"
+              />
+              <input
+                id="input-bg-color"
+                type="text"
+                value={bgColor}
+                onChange={(e) => setBgColor(e.target.value)}
+                maxLength={7}
+                className="w-full bg-transparent font-mono text-xs uppercase text-neutral-800 dark:text-neutral-200 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 block mb-2.5">
+            Curated Accessibility Swatches
+          </span>
+          <div className="grid grid-cols-3 gap-2">
+            {SWATCHES.map((s, index) => {
+              const active = textColor.toLowerCase() === s.text.toLowerCase() && bgColor.toLowerCase() === s.bg.toLowerCase();
+              return (
+                <button
+                  key={index}
+                  id={`swatch-${index}`}
+                  onClick={()=> handleApplySwatch(s.text, s.bg)}
+                  style={{ backgroundColor: s.bg, color: s.text }}
+                  className={`p-2.5 rounded-lg text-[10px] text-center font-semibold border transition-all cursor-pointer truncate ${
+                    active 
+                      ? 'border-indigo-500 scale-[1.03] ring-1 ring-indigo-500' 
+                      : 'border-neutral-200 hover:border-neutral-400'
+                  }`}
+                  title={s.label}
+                >
+                  Aa
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+        {/* Color blindness simulator selectors */}
+        <div>
+          <h3 className="text-xs font-semibold tracking-wide text-neutral-600 dark:text-neutral-400 uppercase flex items-center gap-2 mb-2.5">
+            <Eye className="w-4 h-4 text-cyan-550" />
+            Daltonism Simulator
+          </h3>
+          <p className="text-[11px] text-neutral-500 mb-3 leading-relaxed">
+            Test how color-blind readers perceive your selection. Simulates different optical cones using linear matrices.
+          </p>
+
+          <div className="flex flex-col gap-1.5">
+            {COLOR_BLINDNESS_TYPES.map((cb) => {
+              const active = activeBlindness === cb.id;
+              return (
+                <button
+                  key={cb.id}
+                  id={`btn-blindness-${cb.id}`}
+                  onClick={() => setActiveBlindness(cb.id)}
+                  className={`w-full p-2.5 text-left rounded-xl text-xs transition-all flex items-center justify-between cursor-pointer border ${
+                    active
+                      ? 'bg-neutral-900 border-neutral-950 text-white dark:bg-neutral-800 dark:border-neutral-700'
+                      : 'bg-neutral-50 dark:bg-neutral-950 border-neutral-100 dark:border-neutral-800 hover:border-neutral-200 text-neutral-700 dark:text-neutral-300'
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{cb.name}</span>
+                    <span className={`text-[9px] ${active ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                      {cb.description}
+                    </span>
+                  </div>
+                  {active && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Live Checker Results & Display Card */}
+      <div className="lg:col-span-7 flex flex-col gap-6">
+        {/* Contrast results circle & badge blocks */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+          {/* Numeric Circle */}
+          <div className="md:col-span-5 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-sm">
+            <span className="text-xs font-semibold tracking-wider uppercase text-neutral-400">Contrast Ratio</span>
+            <div className="relative mt-4 flex items-center justify-center">
+              {/* Outer boundary meter */}
+              <div className="w-28 h-28 rounded-full border-4 border-dashed border-indigo-100 dark:border-indigo-950 flex flex-col items-center justify-center">
+                <span className="text-3xl font-extrabold tracking-tight font-display text-transparent bg-clip-text bg-gradient-to-r from-indigo-650 to-indigo-500 dark:from-indigo-400 dark:to-cyan-400">
+                  {contrastRatio.toFixed(2)}
+                </span>
+                <span className="text-[10px] font-mono text-neutral-400 mt-0.5">:1 ratio</span>
+              </div>
+            </div>
+            
+            <div className={`mt-5 py-1 px-3.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
+              contrastRatio >= 7.0 
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' 
+                : contrastRatio >= 4.5 
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' 
+                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+            }`}>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              {contrastRatio >= 7.0 ? 'Elite (AAA)' : contrastRatio >= 4.5 ? 'Compliant (AA)' : 'Insufficient Level'}
+            </div>
+          </div>
+
+          {/* Individual Rules matrix */}
+          <div className="md:col-span-7 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-6 flex flex-col gap-3 justify-center shadow-sm">
+            <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-1.5">WCAG 2.1 CONFORMANCE CHECK</h4>
+
+            <div className="flex items-center justify-between p-2.5 bg-neutral-50 dark:bg-neutral-950 rounded-xl">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">AA Normal Text</span>
+                <span className="text-[10px] text-neutral-500">Requires 4.5:1 min</span>
+              </div>
+              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                results.aaNormal 
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' 
+                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
+              }`}>
+                {results.aaNormal ? 'PASS' : 'FAIL'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 bg-neutral-50 dark:bg-neutral-950 rounded-xl">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">AA Large Text (18pt+)</span>
+                <span className="text-[10px] text-neutral-500">Requires 3.0:1 min</span>
+              </div>
+              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                results.aaLarge 
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' 
+                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
+              }`}>
+                {results.aaLarge ? 'PASS' : 'FAIL'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 bg-neutral-50 dark:bg-neutral-950 rounded-xl">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">AAA Normal Text</span>
+                <span className="text-[10px] text-neutral-500">Requires 7.0:1 min</span>
+              </div>
+              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                results.aaaNormal 
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' 
+                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
+              }`}>
+                {results.aaaNormal ? 'PASS' : 'FAIL'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-2.5 bg-neutral-50 dark:bg-neutral-950 rounded-xl">
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">AAA Large Text (18pt+)</span>
+                <span className="text-[10px] text-neutral-500">Requires 4.5:1 min</span>
+              </div>
+              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                results.aaaLarge 
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400' 
+                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400'
+              }`}>
+                {results.aaaLarge ? 'PASS' : 'FAIL'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Mock UI render that applies selected colors AND the SVG filter matrix */}
+        <div className="relative border border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 bg-neutral-50 dark:bg-neutral-950 overflow-hidden flex flex-col items-center">
+          <div className="absolute top-4 left-4 font-mono text-[9px] text-neutral-400 uppercase select-none pointer-events-none">
+            Live Accessibility Checker Canvas
+          </div>
+          <div className="absolute top-4 right-4 font-mono text-[9px] text-indigo-500 select-none pointer-events-none">
+            FILTER: {activeBlindness.toUpperCase()}
+          </div>
+
+          <div
+            id="accessibility-sandbox-demo"
+            style={{
+              backgroundColor: bgColor,
+              color: textColor,
+              filter: activeBlindness !== 'normal' ? 'url(#blindness-filter)' : 'none',
+            }}
+            className="w-full max-w-md rounded-xl p-6 shadow-md transition-all duration-150 flex flex-col gap-4 mt-6"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                style={{ backgroundColor: textColor, color: bgColor }}
+                className="w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shrink-0 font-display"
+              >
+                UX
+              </div>
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold text-sm tracking-tight">Executive Studio Suite</span>
+                <span className="text-[10px] opacity-75 font-mono">Contrast Simulator Mode</span>
+              </div>
+            </div>
+
+            <p className="text-xs leading-relaxed opacity-90">
+              The contrast ratio measures calculated difference in sRGB lightness channels. Inadequate values cause cognitive friction, forcing eyes to refocus constantly. Keep contrast optimal for text nodes!
+            </p>
+
+            <div className="flex gap-2 mt-2">
+              <span className="px-2.5 py-1 rounded text-[10px] font-mono border opacity-80" style={{ borderColor: textColor }}>
+                BG: {bgColor.toUpperCase()}
+              </span>
+              <span className="px-2.5 py-1 rounded text-[10px] font-mono border opacity-80" style={{ borderColor: textColor }}>
+                TEXT: {textColor.toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Informative advice */}
+        <div id="accessibility-tips" className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-800 rounded-xl p-5 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">Design Ratio Standard (A11y Rules):</span>
+            <span className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              For general body copy, aim for at least <strong>4.5:1</strong>. For technical terminal grids or large brand headings, <strong>3.0:1</strong> is permissible. High contrast improves dark-room readability & assists visual impairment. Always design with inclusive accessibility first to elevate your professional standards.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

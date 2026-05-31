@@ -1,0 +1,484 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { DesignMood, MOOD_PRESETS } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
+import { Sparkles, Sliders, Type, HelpCircle, Layers, CheckCircle, Info, RefreshCw } from 'lucide-react';
+
+interface MoodPlaygroundProps {
+  activeMood: DesignMood;
+  setActiveMood: (mood: DesignMood) => void;
+}
+
+export default function MoodPlayground({ activeMood, setActiveMood }: MoodPlaygroundProps) {
+  const preset = MOOD_PRESETS[activeMood];
+
+  // Custom user adjustments over the preset
+  const [baseSize, setBaseSize] = useState<number>(preset.primaryScale);
+  const [customRadius, setCustomRadius] = useState<number>(
+    activeMood === 'swiss' ? 0 : activeMood === 'tech' ? 6 : activeMood === 'editorial' ? 16 : 12
+  );
+  const [customPadding, setCustomPadding] = useState<number>(
+    activeMood === 'swiss' ? 32 : activeMood === 'tech' ? 20 : activeMood === 'editorial' ? 24 : 28
+  );
+  const [customBorder, setCustomBorder] = useState<number>(
+    activeMood === 'swiss' ? 1 : activeMood === 'tech' ? 1 : activeMood === 'editorial' ? 1 : 3
+  );
+  const [tracking, setTracking] = useState<string>(
+    activeMood === 'swiss' ? '-0.02em' : activeMood === 'tech' ? '0.04em' : activeMood === 'editorial' ? '0em' : '0.01em'
+  );
+  const [showWireframe, setShowWireframe] = useState<boolean>(false);
+
+  // Sync back state when preset is clicked
+  const handlePresetSelect = (mood: DesignMood) => {
+    setActiveMood(mood);
+    const defaults = MOOD_PRESETS[mood];
+    setBaseSize(defaults.primaryScale);
+    setCustomRadius(mood === 'swiss' ? 0 : mood === 'tech' ? 6 : mood === 'editorial' ? 16 : 12);
+    setCustomPadding(mood === 'swiss' ? 32 : mood === 'tech' ? 20 : mood === 'editorial' ? 24 : 28);
+    setCustomBorder(mood === 'swiss' ? 1 : mood === 'tech' ? 1 : mood === 'editorial' ? 1 : 3);
+    setTracking(mood === 'swiss' ? '-0.02em' : mood === 'tech' ? '0.04em' : mood === 'editorial' ? '0em' : '0.01em');
+  };
+
+  const handleReset = () => {
+    handlePresetSelect(activeMood);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Parameters Panel */}
+      <div id="controls-panel" className="lg:col-span-5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 p-6 shadow-sm flex flex-col gap-6">
+        <div>
+          <h3 className="text-sm font-semibold tracking-wide text-neutral-400 dark:text-neutral-500 uppercase flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-500" />
+            Preset Visual Moods
+          </h3>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            Toggle presets to alter the entire visual and emotional system instantly.
+          </p>
+
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {(Object.keys(MOOD_PRESETS) as DesignMood[]).map((mId) => {
+              const active = activeMood === mId;
+              const item = MOOD_PRESETS[mId];
+              return (
+                <button
+                  key={mId}
+                  id={`preset-${mId}`}
+                  onClick={() => handlePresetSelect(mId)}
+                  className={`relative p-3 text-left rounded-xl border text-xs transition-all flex flex-col gap-1 cursor-pointer group ${
+                    active
+                      ? 'border-neutral-900 bg-neutral-950 text-white dark:border-neutral-700 dark:bg-neutral-800'
+                      : 'border-neutral-100 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
+                  }`}
+                >
+                  <span className="font-semibold text-sm tracking-tight flex items-center justify-between w-full">
+                    {item.name}
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />}
+                  </span>
+                  <span className={`text-[10px] leading-tight ${active ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                    {item.id === 'swiss' && 'Structural & Bold'}
+                    {item.id === 'editorial' && 'Graceful & Literary'}
+                    {item.id === 'tech' && 'Monospaced & Pure'}
+                    {item.id === 'brutalist' && 'Saturated Outline'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+        {/* Dynamic Tuning Controls */}
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold tracking-wide text-neutral-400 dark:text-neutral-500 uppercase flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-emerald-500" />
+              Micro-Layout Fine Tuning
+            </h3>
+            <button
+              id="btn-reset-tuning"
+              onClick={handleReset}
+              className="text-xs hover:text-neutral-900 text-neutral-400 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+              title="Restore standard values for this style preset"
+            >
+              <RefreshCw className="w-3 h-3" /> Reset
+            </button>
+          </div>
+
+          {/* Slider 1: Typography Base Scale */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                <Type className="w-3.5 h-3.5 text-neutral-400" />
+                Text Scale
+              </span>
+              <span className="font-mono text-neutral-500 dark:text-neutral-400 text-[11px] bg-neutral-50 dark:bg-neutral-950 px-1.5 py-0.5 rounded">
+                Base: {baseSize}px
+              </span>
+            </div>
+            <input
+              id="slider-text-scale"
+              type="range"
+              min="12"
+              max="22"
+              value={baseSize}
+              onChange={(e) => setBaseSize(Number(e.target.value))}
+              className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+          </div>
+
+          {/* Slider 2: Spacing Padding */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-neutral-400" />
+                Structural Padding
+              </span>
+              <span className="font-mono text-neutral-500 dark:text-neutral-400 text-[11px] bg-neutral-50 dark:bg-neutral-950 px-1.5 py-0.5 rounded">
+                {customPadding}px
+              </span>
+            </div>
+            <input
+              id="slider-padding-size"
+              type="range"
+              min="12"
+              max="48"
+              value={customPadding}
+              onChange={(e) => setCustomPadding(Number(e.target.value))}
+              className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            />
+          </div>
+
+          {/* Slider 3: Corner Radius */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-neutral-400" />
+                Corner Radius
+              </span>
+              <span className="font-mono text-neutral-500 dark:text-neutral-400 text-[11px] bg-neutral-50 dark:bg-neutral-950 px-1.5 py-0.5 rounded">
+                {customRadius}px
+              </span>
+            </div>
+            <input
+              id="slider-corner-radius"
+              type="range"
+              min="0"
+              max="32"
+              value={customRadius}
+              onChange={(e) => setCustomRadius(Number(e.target.value))}
+              className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            />
+          </div>
+
+          {/* Slider 4: Border Width */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-neutral-400" />
+                Border Thickness
+              </span>
+              <span className="font-mono text-neutral-500 dark:text-neutral-400 text-[11px] bg-neutral-50 dark:bg-neutral-950 px-1.5 py-0.5 rounded">
+                {customBorder}px
+              </span>
+            </div>
+            <input
+              id="slider-border-width"
+              type="range"
+              min="0"
+              max="6"
+              value={customBorder}
+              onChange={(e) => setCustomBorder(Number(e.target.value))}
+              className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+            />
+          </div>
+
+          {/* Slider 5: Letter Spacing */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                <Type className="w-3.5 h-3.5 text-neutral-400" />
+                Letter Tracking
+              </span>
+              <span className="font-mono text-neutral-500 dark:text-neutral-400 text-[11px] bg-neutral-50 dark:bg-neutral-950 px-1.5 py-0.5 rounded">
+                {tracking}
+              </span>
+            </div>
+            <select
+              id="select-tracking"
+              value={tracking}
+              onChange={(e) => setTracking(e.target.value)}
+              className="w-full p-2 text-xs border border-neutral-200 dark:border-neutral-800 rounded-lg bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="-0.04em">Tight (-0.04em) — Ideal for bold headings</option>
+              <option value="-0.02em">Medium Tight (-0.02em)</option>
+              <option value="0em">Normal (0em) — High legibility body</option>
+              <option value="0.04em">Spaced Small (+0.04em)</option>
+              <option value="0.08em">Expanded (+0.08em) — Technical mono look</option>
+            </select>
+          </div>
+        </div>
+
+        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+        {/* Grid Debugger Switch */}
+        <div className="flex items-center justify-between p-3.5 bg-neutral-50 dark:bg-neutral-950 rounded-xl">
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+              Show Blueprint Wireframes
+            </span>
+            <span className="text-[10px] text-neutral-500">
+              Overlay bounding layouts & pixel padding structures
+            </span>
+          </div>
+          <button
+            id="toggle-wireframe"
+            onClick={() => setShowWireframe(!showWireframe)}
+            className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer ${
+              showWireframe ? 'bg-indigo-500' : 'bg-neutral-300 dark:bg-neutral-800'
+            }`}
+          >
+            <div
+              className={`w-4.5 h-4.5 rounded-full bg-white shadow transition-transform ${
+                showWireframe ? 'translate-x-4.5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Live Interactive Preview Screen */}
+      <div className="lg:col-span-7 flex flex-col gap-6">
+        {/* The Live Sandbox */}
+        <div className="relative border border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl p-8 bg-neutral-50 dark:bg-neutral-950 flex flex-col items-center justify-center min-h-[480px] overflow-hidden">
+          {/* Diagnostic Stats Overlay inside Sandbox */}
+          <div className="absolute top-4 left-4 flex gap-1.5 font-mono text-[9px] text-neutral-400 pointer-events-none select-none z-10 flex-wrap">
+            <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 rounded">
+              W: ~380px
+            </span>
+            <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 rounded">
+              FONT-FAMILY: {preset.id === 'swiss' ? 'Inter Bold' : preset.id === 'editorial' ? 'Playfair Serif' : preset.id === 'tech' ? 'JetBrains Mono' : 'Plus Jakarta'}
+            </span>
+            <span className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 rounded">
+              MODAL STACK: {activeMood.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="absolute top-4 right-4 flex gap-1 font-mono text-[9px] text-neutral-400 pointer-events-none select-none z-10">
+            {showWireframe && (
+              <span className="px-1.5 py-0.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 rounded animate-pulse">
+                DEBUG MODE: ACTIVE
+              </span>
+            )}
+          </div>
+
+          {/* Render target card */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMood}
+              initial={{ opacity: 0, scale: 0.98, y: 5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: -5 }}
+              transition={{ duration: 0.25 }}
+              style={{
+                borderRadius: `${customRadius}px`,
+                padding: `${customPadding}px`,
+                fontSize: `${baseSize}px`,
+                borderWidth: `${customBorder}px`,
+                letterSpacing: tracking,
+              }}
+              className={`w-full max-w-sm ${preset.bgStyle} ${preset.textColor} select-none transition-all duration-150 relative`}
+              id="sandbox-preview-card"
+            >
+              {/* Optional Brutalist flat-volume shadow */}
+              {activeMood === 'brutalist' && (
+                <div
+                  style={{ borderRadius: `${customRadius}px` }}
+                  className="absolute inset-0 bg-black border-3 border-black -z-10 translate-x-1.5 translate-y-1.5 pointer-events-none"
+                />
+              )}
+
+              {/* Wireframe padding borders */}
+              {showWireframe && (
+                <div
+                  style={{
+                    inset: `${customPadding}px`,
+                  }}
+                  className="absolute border border-dashed border-rose-400 dark:border-rose-500 pointer-events-none bg-rose-500/5"
+                >
+                  <span className="absolute -top-4 left-0 text-[8px] font-mono text-rose-500 bg-white dark:bg-neutral-900 px-1 border border-rose-200 pointer-events-all">
+                    Pad: {customPadding}px
+                  </span>
+                </div>
+              )}
+
+              {/* Card Header */}
+              <div className="flex flex-col gap-2 relative">
+                <div className="flex items-center justify-between">
+                  <span
+                    style={{ fontSize: `${baseSize * 0.7}px` }}
+                    className="font-mono text-[10px] uppercase font-bold tracking-widest opacity-60 flex items-center gap-1"
+                  >
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+                    Interactive Blueprint v4.2
+                  </span>
+                  <span
+                    style={{ fontSize: `${baseSize * 0.65}px` }}
+                    className="font-mono opacity-50"
+                  >
+                    05.31 / UTC
+                  </span>
+                </div>
+
+                <h1
+                  style={{ fontSize: `${baseSize * 1.6}px`, lineHeight: 1.15 }}
+                  className={`mt-1 tracking-tight ${preset.headingFont}`}
+                >
+                  Visual Architecture
+                </h1>
+              </div>
+
+              {/* Card Divider */}
+              <div
+                style={{
+                  marginTop: `${baseSize * 0.9}px`,
+                  marginBottom: `${baseSize * 0.9}px`,
+                }}
+                className={`w-full border-t ${
+                  activeMood === 'swiss'
+                    ? 'border-neutral-900'
+                    : activeMood === 'tech'
+                    ? 'border-teal-500/20'
+                    : activeMood === 'editorial'
+                    ? 'border-amber-900/10'
+                    : 'border-neutral-900 border-t-2'
+                }`}
+              />
+
+              {/* Card content bodies */}
+              <div className="flex flex-col gap-3 relative">
+                <p
+                  style={{ fontSize: `${baseSize * 0.88}px`, lineHeight: 1.5 }}
+                  className={`${preset.fontFamily} font-light tracking-normal leading-relaxed`}
+                >
+                  Excellent user experiences derive from strict mathematical discipline. Harmonizing text hierarchy with micro-spacing guides creates subconscious comfort for users.
+                </p>
+
+                {/* Micro metrics container */}
+                <div
+                  style={{
+                    marginTop: `${baseSize * 0.4}px`,
+                    borderRadius: `${customRadius / 2}px`,
+                  }}
+                  className={`p-3 grid grid-cols-2 gap-2 text-left ${
+                    activeMood === 'swiss'
+                      ? 'bg-neutral-100 text-neutral-900 border border-neutral-200'
+                      : activeMood === 'tech'
+                      ? 'bg-neutral-900/60 text-teal-300 border border-teal-500/10'
+                      : activeMood === 'editorial'
+                      ? 'bg-amber-150/25 text-amber-900 border border-amber-900/5'
+                      : 'bg-[#ffeedd] text-neutral-950 border-2 border-black'
+                  }`}
+                >
+                  <div>
+                    <div style={{ fontSize: `${baseSize * 0.55}px` }} className="font-mono opacity-60">
+                      Legibility Score
+                    </div>
+                    <div style={{ fontSize: `${baseSize * 0.95}px` }} className="font-bold font-display">
+                      WCAG AAA
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: `${baseSize * 0.55}px` }} className="font-mono opacity-60">
+                      Theme Rhythm
+                    </div>
+                    <div style={{ fontSize: `${baseSize * 0.95}px` }} className="font-bold font-display">
+                      {activeMood.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live simulation action button */}
+                <button
+                  id="sandbox-interactive-btn"
+                  style={{
+                    marginTop: `${baseSize * 0.5}px`,
+                    borderRadius: `${customRadius / 1.5}px`,
+                    backgroundColor: preset.accentColor,
+                    fontSize: `${baseSize * 0.85}px`,
+                  }}
+                  className={`w-full py-2.5 font-semibold text-center transition-all cursor-pointer flex items-center justify-center gap-2 font-display ${
+                    activeMood === 'swiss'
+                      ? 'text-white hover:bg-neutral-800'
+                      : activeMood === 'tech'
+                      ? 'text-black hover:opacity-90 shadow-lg shadow-teal-500/20'
+                      : activeMood === 'editorial'
+                      ? 'text-amber-50 hover:opacity-90'
+                      : 'text-black hover:bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5'
+                  }`}
+                  onClick={() => alert(`Applied visual config: ${activeMood.toUpperCase()} with Base: ${baseSize}px, Radius: ${customRadius}px!`)}
+                >
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  Apply Architecture
+                </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Dynamic Professional Critique & Educational Card */}
+        <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-800 rounded-xl p-5">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+                Professional UX Analysis of Selected Config
+              </span>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                {activeMood === 'swiss' && (
+                  <>
+                    The <strong>Minimalist Swiss System</strong> favors flat high contrast, omitting shadows to prioritize physical structure. Your custom sizing of <strong className="text-neutral-900 dark:text-neutral-100">{baseSize}px typography</strong> with <strong className="text-neutral-900 dark:text-neutral-100">{customRadius}px rounded borders</strong> and tight negative spacing establishes clean horizontal flow metrics.
+                  </>
+                )}
+                {activeMood === 'editorial' && (
+                  <>
+                    The <strong>Cozy Editorial System</strong> uses soft organic lighting & light beige canvas weights to minimize user sensory fatigue. Spacing is comfortable to enhance reading speed, while larger curves invite long-term visual comfort.
+                  </>
+                )}
+                {activeMood === 'tech' && (
+                  <>
+                    The <strong>Futuristic Tech System</strong> relies on strict terminal guidelines. Glow shadows, dark canvases with high font weight contrasts, and thin border lines focus purely on information density and technical status.
+                  </>
+                )}
+                {activeMood === 'brutalist' && (
+                  <>
+                    The <strong>Neo-Brutalist System</strong> defies high-society corporate constraints using blocky custom shadows and raw high-saturation colors. Spacing remains playful but solid borders prevent functional elements from feeling disorganized.
+                  </>
+                )}
+              </p>
+              <div className="grid grid-cols-3 gap-2 mt-2 pt-2.5 border-t border-neutral-100 dark:border-neutral-800 font-mono text-[9px] text-neutral-500">
+                <div>
+                  <span className="block font-medium text-neutral-700 dark:text-neutral-300">Padding-to-Size</span>
+                  <span>{(customPadding / baseSize).toFixed(2)} ratio</span>
+                </div>
+                <div>
+                  <span className="block font-medium text-neutral-700 dark:text-neutral-300">Layout Weight</span>
+                  <span>{customBorder > 2 ? 'Heavy Solid' : 'Svelte Line'}</span>
+                </div>
+                <div>
+                  <span className="block font-medium text-neutral-700 dark:text-neutral-300">Rhythm Score</span>
+                  <span>{baseSize % 4 === 0 ? 'Optimal (4px Grid)' : 'Sub-optimal'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,333 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useMemo } from 'react';
+import { Type, Grid, Copy, Check, FileCode, RotateCcw } from 'lucide-react';
+
+const SCALES = [
+  { name: 'Minor Second (1.067)', ratio: 1.067, desc: 'Ultra compact, great for text-heavy dashboards' },
+  { name: 'Major Second (1.125)', ratio: 1.125, desc: 'Classic default, tidy increments' },
+  { name: 'Major Third (1.250)', ratio: 1.250, desc: 'Medium stark, crisp contrast between steps' },
+  { name: 'Perfect Fourth (1.333)', ratio: 1.333, desc: 'Solid typographic voice' },
+  { name: 'Golden Ratio (1.618)', ratio: 1.618, desc: 'Maximized classical proportion and drama' },
+];
+
+export default function GridSystem() {
+  const [baseSize, setBaseSize] = useState<number>(14);
+  const [selectedScaleIndex, setSelectedScaleIndex] = useState<number>(2); // Default Major Third
+  const [gridUnit, setGridUnit] = useState<number>(8); // 8px default grid
+  const [copied, setCopied] = useState<boolean>(false);
+  const [showGridOverlay, setShowGridOverlay] = useState<boolean>(true);
+
+  const activeScale = SCALES[selectedScaleIndex];
+
+  // Calculate geometric font steps based on active modular scale
+  const typographicSteps = useMemo(() => {
+    const ratio = activeScale.ratio;
+    return {
+      xs: Math.round(baseSize / ratio),
+      base: baseSize,
+      md: Math.round(baseSize * ratio),
+      lg: Math.round(baseSize * Math.pow(ratio, 2)),
+      xl: Math.round(baseSize * Math.pow(ratio, 3)),
+      xxl: Math.round(baseSize * Math.pow(ratio, 4)),
+      xxxl: Math.round(baseSize * Math.pow(ratio, 5)),
+    };
+  }, [baseSize, activeScale]);
+
+  // CSS snippet generator
+  const generatedCSS = useMemo(() => {
+    return `:root {
+  --font-base-scale: ${baseSize}px;
+  --font-ratio: ${activeScale.ratio};
+
+  --text-xs:   ${typographicSteps.xs}px; /* Step -1 */
+  --text-base: ${typographicSteps.base}px; /* Step 0 (Base) */
+  --text-md:   ${typographicSteps.md}px; /* Step 1 */
+  --text-lg:   ${typographicSteps.lg}px; /* Step 2 */
+  --text-xl:   ${typographicSteps.xl}px; /* Step 3 */
+  --text-2xl:  ${typographicSteps.xxl}px; /* Step 4 */
+  --text-3xl:  ${typographicSteps.xxxl}px; /* Step 5 */
+  
+  --spacing-grid-unit: ${gridUnit}px;
+}`;
+  }, [baseSize, activeScale, typographicSteps, gridUnit]);
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedCSS);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Parameter inputs list */}
+      <div id="grid-inputs" className="lg:col-span-5 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-100 dark:border-neutral-800 p-6 shadow-sm flex flex-col gap-6">
+        <div>
+          <h3 className="text-sm font-semibold tracking-wide text-neutral-400 dark:text-neutral-500 uppercase flex items-center gap-2">
+            <Type className="w-4 h-4 text-violet-500" />
+            Modular Scale Generator
+          </h3>
+          <p className="text-xs text-neutral-500 mt-1">
+            Build beautiful, mathematically consistent text ladders instead of picking subjective numbers.
+          </p>
+        </div>
+
+        {/* Base Font Input & Scale Picker */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300">Base Font Size (px)</label>
+              <span className="font-mono text-[11px] text-neutral-500">{baseSize}px</span>
+            </div>
+            <input
+              id="input-base-font-size"
+              type="range"
+              min="12"
+              max="20"
+              value={baseSize}
+              onChange={(e) => setBaseSize(Number(e.target.value))}
+              className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-violet-500"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Scale Ratio Presets</label>
+            <div className="flex flex-col gap-1.5">
+              {SCALES.map((sc, index) => {
+                const active = selectedScaleIndex === index;
+                return (
+                  <button
+                    key={index}
+                    id={`scale-preset-${index}`}
+                    onClick={() => setSelectedScaleIndex(index)}
+                    className={`text-left p-2.5 rounded-xl text-xs transition-all border flex flex-col cursor-pointer ${
+                      active
+                        ? 'bg-neutral-950 border-neutral-900 text-white dark:bg-neutral-800 dark:border-neutral-700'
+                        : 'bg-neutral-50 dark:bg-neutral-950 border-neutral-100 dark:border-neutral-800 hover:border-neutral-200 text-neutral-700 dark:text-neutral-300'
+                    }`}
+                  >
+                    <span className="font-bold flex items-center justify-between">
+                      {sc.name}
+                      {active && <span className="w-1.5 h-1.5 bg-violet-400 rounded-full" />}
+                    </span>
+                    <span className={`text-[10px] ${active ? 'text-neutral-400' : 'text-neutral-500'} mt-0.5`}>
+                      {sc.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-neutral-100 dark:border-neutral-800" />
+
+        {/* 8-Point spacing checker configuration */}
+        <div className="flex flex-col gap-4">
+          <div>
+            <h3 className="text-sm font-semibold tracking-wide text-neutral-400 dark:text-neutral-500 uppercase flex items-center gap-2">
+              <Grid className="w-4 h-4 text-emerald-500" />
+              Symmetric 8pt Grid Setup
+            </h3>
+            <p className="text-xs text-neutral-500 mt-1">
+              UX elements are laid out in custom intervals. Change standard baseline snap parameters below.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300">Base Grid Increment</label>
+              <span className="font-mono text-[11px] text-neutral-500">{gridUnit}px</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[4, 8, 12, 16].map((unit) => {
+                const active = gridUnit === unit;
+                return (
+                  <button
+                    key={unit}
+                    id={`btn-grid-unit-${unit}`}
+                    onClick={() => setGridUnit(unit)}
+                    className={`py-2 text-center rounded-lg text-xs font-mono font-bold border cursor-pointer transition-all ${
+                      active
+                        ? 'bg-emerald-505 bg-emerald-600 border-emerald-600 text-white'
+                        : 'bg-neutral-50 dark:bg-neutral-950 border-neutral-150 text-neutral-700'
+                    }`}
+                  >
+                    {unit}px
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Toggle baseline lines */}
+          <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-950 rounded-xl">
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">Show Matrix Overlay</span>
+              <span className="text-[10px] text-neutral-500">Show vertical mesh align points</span>
+            </div>
+            <button
+              id="btn-toggle-grid-overlay"
+              onClick={() => setShowGridOverlay(!showGridOverlay)}
+              className={`w-10 h-5.5 rounded-full p-0.5 transition-colors cursor-pointer ${
+                showGridOverlay ? 'bg-emerald-500' : 'bg-neutral-300 dark:bg-neutral-800'
+              }`}
+            >
+              <div
+                className={`w-4.5 h-4.5 rounded-full bg-white shadow transition-transform ${
+                  showGridOverlay ? 'translate-x-4.5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Live previews & stylesheet export */}
+      <div className="lg:col-span-7 flex flex-col gap-6">
+        {/* Render typographic hierarchy scales */}
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-6 shadow-sm flex flex-col gap-5">
+          <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">MATH-GENERATED TYPOGRAPHIC LADDER</span>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex items-end justify-between hover:bg-neutral-50 dark:hover:bg-neutral-950 p-2.5 rounded-xl border border-transparent hover:border-neutral-200/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono text-neutral-400 mb-0.5">3XL STEP (Header / Hero)</span>
+                <h2 style={{ fontSize: `${typographicSteps.xxxl}px`, lineHeight: 1.15 }} className="font-display font-extrabold tracking-tight text-neutral-900 dark:text-neutral-100">
+                  Visual Mastery
+                </h2>
+              </div>
+              <span className="font-mono text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded shrink-0">
+                {typographicSteps.xxxl}px
+              </span>
+            </div>
+
+            <div className="flex items-end justify-between hover:bg-neutral-50 dark:hover:bg-neutral-950 p-2.5 rounded-xl border border-transparent hover:border-neutral-200/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono text-neutral-400 mb-0.5">XL STEP (Title Block)</span>
+                <h3 style={{ fontSize: `${typographicSteps.xl}px`, lineHeight: 1.2 }} className="font-display font-semibold tracking-tight text-neutral-800 dark:text-neutral-200">
+                  Geometric Alignment Discipline
+                </h3>
+              </div>
+              <span className="font-mono text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded shrink-0">
+                {typographicSteps.xl}px
+              </span>
+            </div>
+
+            <div className="flex items-end justify-between hover:bg-neutral-50 dark:hover:bg-neutral-950 p-2.5 rounded-xl border border-transparent hover:border-neutral-200/50">
+              <div className="flex flex-col w-4/5">
+                <span className="text-[10px] font-mono text-neutral-400 mb-0.5">BASE STEP (General Reading Body)</span>
+                <p style={{ fontSize: `${typographicSteps.base}px`, lineHeight: 1.5 }} className="text-neutral-600 dark:text-neutral-400 leading-relaxed font-sans">
+                  The primary copy matches our chosen base height. Spacing blocks below standard columns are synchronized geometrically.
+                </p>
+              </div>
+              <span className="font-mono text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded shrink-0">
+                {typographicSteps.base}px
+              </span>
+            </div>
+
+            <div className="flex items-end justify-between hover:bg-neutral-50 dark:hover:bg-neutral-950 p-2.5 rounded-xl border border-transparent hover:border-neutral-200/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono text-neutral-400 mb-0.5">XS STEP (Data Labels / Micro metadata)</span>
+                <span style={{ fontSize: `${typographicSteps.xs}px` }} className="font-mono font-medium text-neutral-550 dark:text-neutral-500 tracking-wider">
+                  SYSTEM CORE INITIALIZATION: ALL SYSTEMS NOMINAL
+                </span>
+              </div>
+              <span className="font-mono text-xs text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded shrink-0">
+                {typographicSteps.xs}px
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Symmetric Grid Visual test container */}
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl p-6 shadow-sm flex flex-col gap-4 relative overflow-hidden">
+          <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">SPA GRID SYSTEM VISUAL SNAP CHECK</span>
+
+          {/* Grid visual snap box */}
+          <div className="relative border border-neutral-250 dark:border-neutral-800 h-48 rounded-xl bg-neutral-50 dark:bg-neutral-950 flex flex-col gap-4 p-6 justify-center">
+            {/* The interactive grid background overlay */}
+            {showGridOverlay && (
+              <div 
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                  backgroundImage: `linear-gradient(to right, #10b981 1px, transparent 1px), linear-gradient(to bottom, #10b981 1px, transparent 1px)`,
+                  backgroundSize: `${gridUnit}px ${gridUnit}px`
+                }}
+              />
+            )}
+
+            <div className="flex flex-col gap-2 relative z-10">
+              <div 
+                style={{ paddingBottom: `${gridUnit}px` }}
+                className="border-b border-neutral-300 dark:border-neutral-800 flex items-center justify-between"
+              >
+                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  Grid Element 1 (Header Spacer)
+                </span>
+                <span className="text-[9px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-250">
+                  Gap: {gridUnit}px
+                </span>
+              </div>
+
+              <div 
+                style={{ marginTop: `${gridUnit * 2}px` }}
+                className="flex items-center gap-3"
+              >
+                <div 
+                  style={{ width: `${gridUnit * 6}px`, height: `${gridUnit * 6}px` }}
+                  className="bg-sky-500 rounded-lg shadow shrink-0 flex items-center justify-center font-mono text-[9px] text-white"
+                >
+                  {gridUnit * 6}w
+                </div>
+                <div className="flex flex-col justify-center">
+                  <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">Rhythm Content Block</span>
+                  <span className="text-[10px] text-neutral-500 leading-tight">Offset exactly by {gridUnit * 2}px top margin</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* CSS Code exporter drawer */}
+        <div className="bg-neutral-950 rounded-2xl p-5 border border-neutral-850 flex flex-col gap-3.5 relative">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 font-mono">
+              <FileCode className="w-4 h-4 text-emerald-450 text-emerald-400" />
+              export-variables.css
+            </span>
+            <button
+              id="btn-copy-css"
+              onClick={handleCopyCode}
+              className="text-xs font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 bg-neutral-800 p-2 py-1.5 rounded-lg border border-neutral-700"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-450" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Copy CSS Variables
+                </>
+              )}
+            </button>
+          </div>
+
+          <pre className="font-mono text-[11px] text-neutral-300 bg-neutral-900/60 p-4 rounded-xl overflow-x-auto whitespace-pre-wrap leading-relaxed select-all">
+            {generatedCSS}
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+}

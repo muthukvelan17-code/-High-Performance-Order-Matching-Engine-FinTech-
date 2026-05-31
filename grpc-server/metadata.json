@@ -1,0 +1,6 @@
+{
+  "name": "Studio Canvas",
+  "description": "A professional UI/UX design workspace, color ratio auditor, and layout micro-interaction playground.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
