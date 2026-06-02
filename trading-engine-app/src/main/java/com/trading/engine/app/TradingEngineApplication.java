@@ -10,10 +10,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
 
 @SpringBootApplication(scanBasePackages = "com.trading.engine")
 public class TradingEngineApplication {
+
+    @Value("${trading.bot.enabled:false}")
+    private boolean botEnabled;
 
     public static void main(String[] args) {
         fixChronicleClasspath();
@@ -91,7 +95,7 @@ public class TradingEngineApplication {
     @Bean
     public CommandLineRunner gRpcServerRunner(TradingEngine engine, MarketDataService marketDataService) {
         return args -> {
-            new Thread(() -> {
+            Thread.ofVirtual().name("gRPC-Server").start(() -> {
                 try {
                     Server server = ServerBuilder.forPort(9090)
                             .addService(new TradingServiceImpl(engine, marketDataService))
@@ -99,11 +103,26 @@ public class TradingEngineApplication {
 
                     System.out.println("Starting gRPC server on port 9090...");
                     server.start();
+
+                    if (botEnabled) {
+                        Thread.ofVirtual().name("Bot-Starter").start(() -> {
+                            try {
+                                // Wait 1 second for the server to be fully ready
+                                Thread.sleep(1000);
+                                System.out.println("Auto-starting Liquidity Provider Bot inside Java 21 Virtual Threads...");
+                                LiquidityProviderBot bot = new LiquidityProviderBot("localhost", 9090);
+                                bot.start();
+                            } catch (Exception ex) {
+                                System.err.println("Failed to auto-start trading bot: " + ex.getMessage());
+                            }
+                        });
+                    }
+
                     server.awaitTermination();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }).start();
+            });
         };
     }
 }
