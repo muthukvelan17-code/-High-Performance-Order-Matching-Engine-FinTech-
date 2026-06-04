@@ -13,6 +13,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Accessors(fluent = true)
 public class Order implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private long orderId;
     private String symbol;
     private long price;

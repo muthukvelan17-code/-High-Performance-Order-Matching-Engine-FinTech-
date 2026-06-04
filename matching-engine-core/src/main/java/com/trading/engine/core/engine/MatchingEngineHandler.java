@@ -15,15 +15,17 @@ public class MatchingEngineHandler implements EventHandler<OrderEvent> {
 
     @Override
     public void onEvent(OrderEvent event, long sequence, boolean endOfBatch) {
-        String symbol = event.getOrder() != null ? event.getOrder().symbol() : null;
+        com.trading.engine.core.model.Order order = event.getOrder();
+        if (order == null) return;
+        String symbol = order.symbol();
         if (symbol == null) return;
 
         OrderBook book = orderBooks.computeIfAbsent(symbol, OrderBook::new);
 
         switch (event.getEventType()) {
             case NEW_ORDER -> {
-                log.info("[MatchingEngine] New Order: {} {} @ {} qty: {}", event.getOrder().side(), event.getOrder().symbol(), event.getOrder().price(), event.getOrder().quantity());
-                List<Trade> trades = book.processOrder(event.getOrder());
+                log.info("[MatchingEngine] New Order: {} {} @ {} qty: {}", order.side(), order.symbol(), order.price(), order.quantity());
+                List<Trade> trades = book.processOrder(order);
                 for (Trade trade : trades) {
                     log.info("[MATCHED] Trade: {} {} at {} (Maker: {}, Taker: {})", trade.quantity(), trade.symbol(), trade.price(), trade.makerOrderId(), trade.takerOrderId());
                 }
@@ -33,8 +35,8 @@ public class MatchingEngineHandler implements EventHandler<OrderEvent> {
                 book.cancelOrder(event.getCancelOrderId());
             }
             case MODIFY_ORDER -> {
-                book.cancelOrder(event.getOrder().orderId());
-                List<Trade> trades = book.processOrder(event.getOrder());
+                book.cancelOrder(order.orderId());
+                List<Trade> trades = book.processOrder(order);
                 event.getTrades().addAll(trades);
             }
         }

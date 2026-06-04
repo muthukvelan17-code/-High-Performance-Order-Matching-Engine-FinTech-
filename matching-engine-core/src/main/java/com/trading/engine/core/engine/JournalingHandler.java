@@ -12,7 +12,10 @@ public class JournalingHandler implements EventHandler<OrderEvent> {
     @Override
     public void onEvent(OrderEvent event, long sequence, boolean endOfBatch) {
         if (event.getEventType() == OrderEvent.EventType.NEW_ORDER) {
-            journaler.journalOrder(event.getOrder());
+            com.trading.engine.core.model.Order order = event.getOrder();
+            if (order != null) {
+                journaler.journalOrder(order);
+            }
         } else if (event.getEventType() == OrderEvent.EventType.CANCEL_ORDER) {
             journaler.journalCancel(event.getCancelOrderId());
         }

@@ -12,8 +12,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.openhft.affinity.AffinityThreadFactory;
 import net.openhft.affinity.AffinityStrategies;
-import java.util.concurrent.Executors;
-
 @Slf4j
 public class TradingEngine {
     @Getter
