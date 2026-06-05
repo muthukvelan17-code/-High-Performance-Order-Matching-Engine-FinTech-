@@ -867,6 +867,145 @@
             font-size: 11px;
             color: var(--text-muted);
         }
+
+        /* Wallet Styling */
+        .wallet-panel {
+            padding: 16px;
+        }
+        .wallet-action-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--google-blue);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .wallet-action-btn:hover {
+            background-color: var(--surface-hover);
+            border-color: var(--google-blue);
+        }
+        .wallet-balances {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .balance-row:hover {
+            border-color: var(--border-hover);
+        }
+        .balance-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .currency-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: #ffffff;
+        }
+        .currency-icon.usd { background-color: #34a853; }
+        .currency-icon.btc { background-color: #f2a900; }
+        .currency-icon.eth { background-color: #3c3c3d; }
+        .currency-icon.sol { background: linear-gradient(135deg, #00ffbd 0%, #9945ff 100%); }
+        
+        .currency-name {
+            font-size: 10px;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .currency-amt {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .currency-amt .unit {
+            font-size: 11px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+        .balance-extra {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-dark);
+            text-align: right;
+        }
+        
+        .wallet-management-panel {
+            margin-top: 14px;
+            border-top: 1px dashed var(--border);
+            padding-top: 12px;
+        }
+        .wallet-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: var(--bg-primary);
+            padding: 3px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+        .wallet-tab {
+            border: none;
+            padding: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 3px;
+            background: transparent;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .wallet-tab.active {
+            background-color: var(--google-blue);
+            color: #ffffff;
+        }
+
+        /* Generic dashboard tab overrides */
+        .dashboard-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: var(--bg-primary);
+            padding: 4px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+        .dashboard-tab {
+            border: none;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .dashboard-tab.active {
+            background-color: var(--google-blue);
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -905,6 +1044,84 @@
     <main>
         <!-- Left Column: Markets Selection & Place Order -->
         <div class="left-column">
+            <!-- Crypto Wallet Card -->
+            <div class="google-card wallet-panel">
+                <h3 class="section-title">
+                    <span>Crypto Wallet</span>
+                    <button class="wallet-action-btn" onclick="toggleWalletPanel()">Manage</button>
+                </h3>
+                <div class="wallet-balances">
+                    <!-- USD Balance -->
+                    <div class="balance-row">
+                        <div class="balance-info">
+                            <span class="currency-icon usd">$</span>
+                            <div>
+                                <div class="currency-name">US Dollar</div>
+                                <div class="currency-amt" id="wallet-USD">100,000.00 <span class="unit">USD</span></div>
+                            </div>
+                        </div>
+                        <div class="balance-extra" id="frozen-USD">Frozen: 0.00</div>
+                    </div>
+                    <!-- BTC Balance -->
+                    <div class="balance-row">
+                        <div class="balance-info">
+                            <span class="currency-icon btc">₿</span>
+                            <div>
+                                <div class="currency-name">Bitcoin</div>
+                                <div class="currency-amt" id="wallet-BTC">1.5000 <span class="unit">BTC</span></div>
+                            </div>
+                        </div>
+                        <div class="balance-extra" id="frozen-BTC">Frozen: 0.0000</div>
+                    </div>
+                    <!-- ETH Balance -->
+                    <div class="balance-row">
+                        <div class="balance-info">
+                            <span class="currency-icon eth">Ξ</span>
+                            <div>
+                                <div class="currency-name">Ethereum</div>
+                                <div class="currency-amt" id="wallet-ETH">12.0000 <span class="unit">ETH</span></div>
+                            </div>
+                        </div>
+                        <div class="balance-extra" id="frozen-ETH">Frozen: 0.0000</div>
+                    </div>
+                    <!-- SOL Balance -->
+                    <div class="balance-row">
+                        <div class="balance-info">
+                            <span class="currency-icon sol">S</span>
+                            <div>
+                                <div class="currency-name">Solana</div>
+                                <div class="currency-amt" id="wallet-SOL">150.0000 <span class="unit">SOL</span></div>
+                            </div>
+                        </div>
+                        <div class="balance-extra" id="frozen-SOL">Frozen: 0.0000</div>
+                    </div>
+                </div>
+                
+                <!-- Expanded Deposit/Withdraw Panel (Hidden by default) -->
+                <div class="wallet-management-panel" id="walletMgmtPanel" style="display: none;">
+                    <div class="wallet-tabs">
+                        <button class="wallet-tab active" id="tabDeposit" onclick="setWalletAction('DEPOSIT')">Deposit</button>
+                        <button class="wallet-tab" id="tabWithdraw" onclick="setWalletAction('WITHDRAW')">Withdraw</button>
+                    </div>
+                    <form id="walletForm" onsubmit="handleWalletAction(event)">
+                        <div class="form-field">
+                            <label class="form-label">Asset</label>
+                            <select class="input-control" id="walletAsset">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="BTC">BTC - Bitcoin</option>
+                                <option value="ETH">ETH - Ethereum</option>
+                                <option value="SOL">SOL - Solana</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label" id="walletAmtLabel">Deposit Amount</label>
+                            <input type="number" class="input-control" id="walletAmount" required min="0.0001" step="any" placeholder="0.00">
+                        </div>
+                        <button type="submit" class="submit-btn buy" id="walletSubmitBtn" style="background-color: var(--google-blue);">EXECUTE DEPOSIT</button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Market Symbols List -->
             <div class="google-card">
                 <h3 class="section-title">Market Symbols</h3>
@@ -1076,11 +1293,17 @@
                 </div>
             </div>
 
-            <!-- Submitted Dashboard Orders -->
+            <!-- Placed Orders & Wallet History Card -->
             <div class="google-card submitted-orders-panel">
-                <h3 class="section-title">My Placed Orders</h3>
+                <div class="dashboard-tabs">
+                    <button class="dashboard-tab active" id="tabActiveOrders" onclick="setDashboardRightTab('ORDERS')">Active Orders</button>
+                    <button class="dashboard-tab" id="tabWalletHistory" onclick="setDashboardRightTab('WALLET_HISTORY')">Wallet Activity</button>
+                </div>
                 <div class="my-orders-scroll" id="myOrdersScroll">
                     <div class="empty-state">No orders placed by dashboard.</div>
+                </div>
+                <div class="my-orders-scroll" id="walletHistoryScroll" style="display: none;">
+                    <div class="empty-state">No wallet transactions yet.</div>
                 </div>
             </div>
         </div>
@@ -1100,6 +1323,310 @@
             'ETHUSD': [3150, 3180, 3160, 3190, 3175, 3210, 3200, 3195, 3205],
             'SOLUSD': [144, 146, 145, 148, 147, 149, 148, 151, 150]
         };
+
+        // --- CRYPTO WALLET ENGINE ---
+        const defaultWalletBalances = {
+            USD: { available: 100000.00, frozen: 0.00 },
+            BTC: { available: 1.5000, frozen: 0.0000 },
+            ETH: { available: 12.0000, frozen: 0.0000 },
+            SOL: { available: 150.0000, frozen: 0.0000 }
+        };
+
+        let processedTradeIds = new Set();
+        let walletAction = 'DEPOSIT';
+        let activeRightTab = 'ORDERS';
+
+        function getWalletBalances() {
+            const stored = localStorage.getItem('walletBalances');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch (e) {
+                    return defaultWalletBalances;
+                }
+            }
+            return defaultWalletBalances;
+        }
+
+        function saveWalletBalances(balances) {
+            localStorage.setItem('walletBalances', JSON.stringify(balances));
+        }
+
+        function updateWalletUI() {
+            const balances = getWalletBalances();
+            
+            document.getElementById('wallet-USD').innerHTML = `${balances.USD.available.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span class="unit">USD</span>`;
+            document.getElementById('wallet-BTC').innerHTML = `${balances.BTC.available.toFixed(4)} <span class="unit">BTC</span>`;
+            document.getElementById('wallet-ETH').innerHTML = `${balances.ETH.available.toFixed(4)} <span class="unit">ETH</span>`;
+            document.getElementById('wallet-SOL').innerHTML = `${balances.SOL.available.toFixed(4)} <span class="unit">SOL</span>`;
+
+            document.getElementById('frozen-USD').innerText = `Frozen: ${balances.USD.frozen.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('frozen-BTC').innerText = `Frozen: ${balances.BTC.frozen.toFixed(4)}`;
+            document.getElementById('frozen-ETH').innerText = `Frozen: ${balances.ETH.frozen.toFixed(4)}`;
+            document.getElementById('frozen-SOL').innerText = `Frozen: ${balances.SOL.frozen.toFixed(4)}`;
+        }
+
+        function toggleWalletPanel() {
+            const panel = document.getElementById('walletMgmtPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function setWalletAction(action) {
+            walletAction = action;
+            const tabDeposit = document.getElementById('tabDeposit');
+            const tabWithdraw = document.getElementById('tabWithdraw');
+            const amtLabel = document.getElementById('walletAmtLabel');
+            const submitBtn = document.getElementById('walletSubmitBtn');
+
+            if (action === 'DEPOSIT') {
+                tabDeposit.classList.add('active');
+                tabWithdraw.classList.remove('active');
+                amtLabel.innerText = 'Deposit Amount';
+                submitBtn.innerText = 'EXECUTE DEPOSIT';
+                submitBtn.style.backgroundColor = 'var(--google-blue)';
+            } else {
+                tabWithdraw.classList.add('active');
+                tabDeposit.classList.remove('active');
+                amtLabel.innerText = 'Withdrawal Amount';
+                submitBtn.innerText = 'EXECUTE WITHDRAWAL';
+                submitBtn.style.backgroundColor = 'var(--google-red)';
+            }
+        }
+
+        function handleWalletAction(e) {
+            e.preventDefault();
+            const asset = document.getElementById('walletAsset').value;
+            const amount = parseFloat(document.getElementById('walletAmount').value);
+
+            if (isNaN(amount) || amount <= 0) {
+                showToastAlert('Invalid Amount', 'Please enter a valid amount.', 'error');
+                return;
+            }
+
+            const balances = getWalletBalances();
+
+            if (walletAction === 'DEPOSIT') {
+                showToastAlert('Tx Initiated', `Depositing ${amount} ${asset}. Waiting for block confirmation...`, 'success');
+                const txHash = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+                addWalletTransaction('DEPOSIT', asset, amount, 'Pending', txHash);
+
+                setTimeout(() => {
+                    const curBalances = getWalletBalances();
+                    curBalances[asset].available += amount;
+                    saveWalletBalances(curBalances);
+                    updateWalletUI();
+
+                    updateTxStatus(txHash, 'Confirmed');
+                    showToastAlert('Deposit Confirmed', `Successfully deposited ${amount} ${asset}.`, 'success');
+                }, 3000);
+            } else {
+                if (balances[asset].available < amount) {
+                    showToastAlert('Insufficient Balance', `You only have ${balances[asset].available} ${asset} available.`, 'error');
+                    return;
+                }
+
+                balances[asset].available -= amount;
+                saveWalletBalances(balances);
+                updateWalletUI();
+
+                showToastAlert('Tx Initiated', `Withdrawing ${amount} ${asset}. Processing on chain...`, 'success');
+                const txHash = '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+                addWalletTransaction('WITHDRAW', asset, amount, 'Pending', txHash);
+
+                setTimeout(() => {
+                    updateTxStatus(txHash, 'Confirmed');
+                    showToastAlert('Withdrawal Confirmed', `Successfully withdrew ${amount} ${asset}.`, 'success');
+                }, 3000);
+            }
+
+            document.getElementById('walletAmount').value = '';
+        }
+
+        function addWalletTransaction(type, asset, amount, status = 'Confirmed', customTxId = null) {
+            const history = getWalletHistory();
+            const txHash = customTxId || ('0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join(''));
+            
+            const tx = {
+                txId: txHash,
+                type: type,
+                asset: asset,
+                amount: amount,
+                status: status,
+                timestamp: Date.now()
+            };
+            history.unshift(tx);
+            if (history.length > 50) history.pop();
+            localStorage.setItem('walletHistory', JSON.stringify(history));
+            if (activeRightTab === 'WALLET_HISTORY') {
+                updateWalletHistoryUI();
+            }
+        }
+
+        function updateTxStatus(txId, newStatus) {
+            const history = getWalletHistory();
+            const tx = history.find(t => t.txId === txId);
+            if (tx) {
+                tx.status = newStatus;
+                localStorage.setItem('walletHistory', JSON.stringify(history));
+                if (activeRightTab === 'WALLET_HISTORY') {
+                    updateWalletHistoryUI();
+                }
+            }
+        }
+
+        function getWalletHistory() {
+            const stored = localStorage.getItem('walletHistory');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch(e) {
+                    return [];
+                }
+            }
+            return [];
+        }
+
+        function updateWalletHistoryUI() {
+            const container = document.getElementById('walletHistoryScroll');
+            const history = getWalletHistory();
+            if (history.length === 0) {
+                container.innerHTML = '<div class="empty-state">No wallet transactions yet.</div>';
+                return;
+            }
+
+            container.innerHTML = history.map(tx => {
+                const formattedTime = new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const isPositive = tx.type === 'DEPOSIT' || tx.type === 'TRADE_SELL';
+                const sign = isPositive ? '+' : '-';
+                const colorClass = isPositive ? 'price-up' : 'price-down';
+                const statusBadge = tx.status === 'Confirmed' ? 
+                    `<span class="order-badge buy" style="background-color: rgba(52, 168, 83, 0.1); border-color: rgba(52, 168, 83, 0.2); color: #34a853; font-size: 8px;">Confirmed</span>` :
+                    `<span class="order-badge" style="background-color: var(--google-yellow-glow); border-color: rgba(249, 171, 0, 0.3); color: var(--google-yellow); font-size: 8px;">Pending</span>`;
+
+                return `
+                    <div class="order-card" style="align-items: flex-start;">
+                        <div style="display: flex; flex-direction: column; gap: 4px; width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; font-size: 11px;">${tx.type.replace('_', ' ')}</span>
+                                <span class="${colorClass}" style="font-weight: 700; font-family: 'JetBrains Mono', monospace;">${sign}${tx.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${tx.asset}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-dark);">
+                                <span style="font-family: 'JetBrains Mono', monospace; cursor: pointer;" title="Copy Hash" onclick="navigator.clipboard.writeText('${tx.txId}'); showToastAlert('Copied Hash', 'TxHash copied to clipboard.', 'success')">
+                                    ${tx.txId.substring(0, 8)}...${tx.txId.substring(tx.txId.length - 6)}
+                                </span>
+                                <span>${formattedTime}</span>
+                            </div>
+                            <div style="margin-top: 4px; display: flex; justify-content: flex-end;">
+                                ${statusBadge}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setDashboardRightTab(tab) {
+            activeRightTab = tab;
+            const tabActiveOrders = document.getElementById('tabActiveOrders');
+            const tabWalletHistory = document.getElementById('tabWalletHistory');
+            const ordersScroll = document.getElementById('myOrdersScroll');
+            const historyScroll = document.getElementById('walletHistoryScroll');
+
+            if (tab === 'ORDERS') {
+                tabActiveOrders.classList.add('active');
+                tabWalletHistory.classList.remove('active');
+                ordersScroll.style.display = 'block';
+                historyScroll.style.display = 'none';
+            } else {
+                tabWalletHistory.classList.add('active');
+                tabActiveOrders.classList.remove('active');
+                ordersScroll.style.display = 'none';
+                historyScroll.style.display = 'block';
+                updateWalletHistoryUI();
+            }
+        }
+
+        function getLastTickerPrice(symbol) {
+            const tickerText = document.getElementById(`price-${symbol}`);
+            return parseFloat(tickerText.innerText.replace(/[$,]/g, '')) || 0;
+        }
+
+        function refundFrozenOrder(payload) {
+            const balances = getWalletBalances();
+            const asset = payload.symbol.substring(0, 3);
+            if (payload.side === 'BUY') {
+                const cost = payload.type === 'LIMIT' ? (payload.price * payload.quantity) : (getLastTickerPrice(payload.symbol) * payload.quantity);
+                balances.USD.frozen = Math.max(0, balances.USD.frozen - cost);
+                balances.USD.available += cost;
+            } else {
+                balances[asset].frozen = Math.max(0, balances[asset].frozen - payload.quantity);
+                balances[asset].available += payload.quantity;
+            }
+            saveWalletBalances(balances);
+            updateWalletUI();
+        }
+
+        function checkOrderMatching(trades) {
+            if (!trades || trades.length === 0) return;
+            
+            let balancesChanged = false;
+            const balances = getWalletBalances();
+            
+            const stored = localStorage.getItem('mySubmittedOrders');
+            if (!stored) return;
+            let userOrders = JSON.parse(stored);
+            
+            const sortedTrades = [...trades].reverse();
+            
+            sortedTrades.forEach(trade => {
+                if (processedTradeIds.has(trade.tradeId)) return;
+                
+                const matchingOrder = userOrders.find(o => o.orderId === trade.makerOrderId || o.orderId === trade.takerOrderId);
+                
+                if (matchingOrder) {
+                    processedTradeIds.add(trade.tradeId);
+                    
+                    const asset = matchingOrder.symbol.substring(0, 3);
+                    
+                    if (matchingOrder.remainingQty === undefined) {
+                        matchingOrder.remainingQty = matchingOrder.quantity;
+                    }
+                    
+                    if (matchingOrder.remainingQty <= 0) return;
+                    
+                    const actualFill = Math.min(trade.quantity, matchingOrder.remainingQty);
+                    matchingOrder.remainingQty -= actualFill;
+                    
+                    if (matchingOrder.side === 'BUY') {
+                        const filledUSD = actualFill * trade.price;
+                        balances.USD.frozen = Math.max(0, balances.USD.frozen - filledUSD);
+                        balances[asset].available += actualFill;
+                        
+                        addWalletTransaction('TRADE_BUY', asset, actualFill, 'Confirmed');
+                        showToastAlert('Order Filled', `Bought ${actualFill} ${asset} at $${trade.price.toLocaleString()} USD!`, 'success');
+                    } else {
+                        balances[asset].frozen = Math.max(0, balances[asset].frozen - actualFill);
+                        const gainedUSD = actualFill * trade.price;
+                        balances.USD.available += gainedUSD;
+                        
+                        addWalletTransaction('TRADE_SELL', asset, actualFill, 'Confirmed');
+                        showToastAlert('Order Filled', `Sold ${actualFill} ${asset} at $${trade.price.toLocaleString()} USD!`, 'success');
+                    }
+                    
+                    balancesChanged = true;
+                }
+            });
+            
+            if (balancesChanged) {
+                saveWalletBalances(balances);
+                updateWalletUI();
+                
+                localStorage.setItem('mySubmittedOrders', JSON.stringify(userOrders));
+                submittedOrdersList = userOrders;
+                updatePlacedOrdersUI();
+            }
+        }
+        // --- END CRYPTO WALLET ENGINE ---
 
         // Theme switching logic (Material Light / Dark)
         function toggleTheme() {
@@ -1142,6 +1669,10 @@
                 }
             }
 
+            // Init Wallet Display
+            updateWalletUI();
+            updateWalletHistoryUI();
+
             loadSymbols();
             updatePlacedOrdersUI();
             startPollingMetrics();
@@ -1155,6 +1686,20 @@
                 const queueDelay = Math.floor(250 + Math.random() * 200);
                 document.getElementById('matchLatencyStat').innerText = `${latencyVal} ms`;
                 document.getElementById('queueDelayStat').innerText = `${queueDelay} ns`;
+            }, 1000);
+
+            // Background poll for all symbols to catch fills
+            setInterval(() => {
+                ['BTCUSD', 'ETHUSD', 'SOLUSD'].forEach(async (sym) => {
+                    if (sym === currentSymbol) return;
+                    try {
+                        const res = await fetch(`/api/trades?symbol=${sym}`);
+                        if (res.ok) {
+                            const trades = await res.json();
+                            checkOrderMatching(trades);
+                        }
+                    } catch (e) {}
+                });
             }, 1000);
         });
 
@@ -1390,6 +1935,7 @@
                 if (!res.ok) return;
                 const trades = await res.json();
                 renderTradesList(trades);
+                checkOrderMatching(trades);
             } catch (err) {
                 console.error("Trades service offline", err);
             }
@@ -1425,8 +1971,45 @@
             const price = orderType === 'LIMIT' ? parseInt(document.getElementById('orderPrice').value) : 0;
             const quantity = parseInt(document.getElementById('orderQty').value);
 
+            // --- Wallet Balance Check & Reservation ---
+            const balances = getWalletBalances();
+            const symbol = currentSymbol;
+            const asset = symbol.substring(0, 3);
+            let usdCost = 0;
+
+            if (currentSide === 'BUY') {
+                if (orderType === 'LIMIT') {
+                    usdCost = price * quantity;
+                } else {
+                    const currentTickerPrice = getLastTickerPrice(symbol);
+                    usdCost = currentTickerPrice * quantity;
+                }
+
+                if (balances.USD.available < usdCost) {
+                    showToastAlert('Insufficient Balance', `Order requires $${usdCost.toLocaleString()} USD, but you only have $${balances.USD.available.toLocaleString()} available.`, 'error');
+                    return;
+                }
+
+                // Reserve/Freeze USD
+                balances.USD.available -= usdCost;
+                balances.USD.frozen += usdCost;
+            } else {
+                // SELL order
+                if (balances[asset].available < quantity) {
+                    showToastAlert('Insufficient Balance', `Order requires ${quantity} ${asset}, but you only have ${balances[asset].available} available.`, 'error');
+                    return;
+                }
+
+                // Reserve/Freeze asset
+                balances[asset].available -= quantity;
+                balances[asset].frozen += quantity;
+            }
+
+            saveWalletBalances(balances);
+            updateWalletUI();
+
             const payload = {
-                symbol: currentSymbol,
+                symbol: symbol,
                 side: currentSide,
                 price: price,
                 quantity: quantity,
@@ -1451,19 +2034,26 @@
                         side: currentSide,
                         price: price,
                         quantity: quantity,
+                        remainingQty: quantity,
                         type: orderType,
                         timestamp: Date.now()
                     });
 
-                    if (submittedOrdersList.length > 20) submittedOrdersList.pop();
+                    if (submittedOrdersList.length > 20) {
+                        submittedOrdersList.pop();
+                    }
                     localStorage.setItem('mySubmittedOrders', JSON.stringify(submittedOrdersList));
                     
                     updatePlacedOrdersUI();
                     fetchOrderBookSnapshot();
                 } else {
+                    // Refund frozen balance
+                    refundFrozenOrder(payload);
                     showToastAlert('Order Rejected', data.message || 'Validation checks failed.', 'error');
                 }
             } catch (err) {
+                // Refund frozen balance
+                refundFrozenOrder(payload);
                 showToastAlert('Connection Error', err.message, 'error');
             }
         }
@@ -1480,6 +2070,26 @@
                 const data = await res.json();
                 if (data.success) {
                     showToastAlert('Cancel Success', `Order ${orderId} successfully removed from the matching queue.`, 'success');
+                    
+                    // Refund frozen balance
+                    const orderToCancel = submittedOrdersList.find(item => item.orderId === orderId);
+                    if (orderToCancel) {
+                        const balances = getWalletBalances();
+                        const asset = symbol.substring(0, 3);
+                        const remaining = orderToCancel.remainingQty !== undefined ? orderToCancel.remainingQty : orderToCancel.quantity;
+                        
+                        if (orderToCancel.side === 'BUY') {
+                            const frozenCost = remaining * orderToCancel.price;
+                            balances.USD.frozen = Math.max(0, balances.USD.frozen - frozenCost);
+                            balances.USD.available += frozenCost;
+                        } else {
+                            balances[asset].frozen = Math.max(0, balances[asset].frozen - remaining);
+                            balances[asset].available += remaining;
+                        }
+                        saveWalletBalances(balances);
+                        updateWalletUI();
+                    }
+
                     submittedOrdersList = submittedOrdersList.filter(item => item.orderId !== orderId);
                     localStorage.setItem('mySubmittedOrders', JSON.stringify(submittedOrdersList));
                     
@@ -1500,21 +2110,24 @@
                 return;
             }
 
-            container.innerHTML = submittedOrdersList.map(item => `
-                <div class="order-card">
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="order-badge ${item.side.toLowerCase()}">${item.side}</span>
-                            <span style="font-weight: 700;">${item.symbol}</span>
-                            <span style="color: var(--text-dark); font-size: 10px;">ID: ${item.orderId}</span>
+            container.innerHTML = submittedOrdersList.map(item => {
+                const remaining = item.remainingQty !== undefined ? item.remainingQty : item.quantity;
+                return `
+                    <div class="order-card">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="order-badge ${item.side.toLowerCase()}">${item.side}</span>
+                                <span style="font-weight: 700;">${item.symbol}</span>
+                                <span style="color: var(--text-dark); font-size: 10px;">ID: ${item.orderId}</span>
+                            </div>
+                            <div style="color: var(--text-muted); font-size: 11px;">
+                                ${item.type} | Qty: <b>${remaining} / ${item.quantity}</b> | Price: ${item.price > 0 ? item.price.toLocaleString() + ' USD' : 'MARKET'}
+                            </div>
                         </div>
-                        <div style="color: var(--text-muted); font-size: 11px;">
-                            ${item.type} | Qty: <b>${item.quantity}</b> | Price: ${item.price > 0 ? item.price.toLocaleString() + ' USD' : 'MARKET'}
-                        </div>
+                        ${remaining > 0 ? `<button class="cancel-btn" onclick="requestCancel(${item.orderId}, '${item.symbol}')">CANCEL</button>` : `<span class="order-badge buy" style="background-color: rgba(52, 168, 83, 0.1); border-color: rgba(52, 168, 83, 0.2); color: #34a853; font-size: 8px;">FILLED</span>`}
                     </div>
-                    <button class="cancel-btn" onclick="requestCancel(${item.orderId}, '${item.symbol}')">CANCEL</button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Render clean Google sparkline trendlines using Canvas
