@@ -1050,6 +1050,37 @@
                     <span>Crypto Wallet</span>
                     <button class="wallet-action-btn" onclick="toggleWalletPanel()">Manage</button>
                 </h3>
+
+                <!-- MetaMask Connection Panel -->
+                <div class="metamask-container" style="background-color: var(--bg-primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--text-muted);">
+                            <svg style="width: 16px; height: 16px;" viewBox="0 0 318.6 318.6">
+                                <path fill="#E2761B" stroke="#E2761B" stroke-linecap="round" stroke-linejoin="round" d="M274.4 35.8L159.3 1.1 44.2 35.8 24.8 142.9l134.5 31.7 134.5-31.7z"/>
+                                <path fill="#E4761B" stroke="#E4761B" stroke-linecap="round" stroke-linejoin="round" d="M159.3 1.1L44.2 35.8l94.8 77.2-22-83.3zM159.3 1.1l115.1 34.7-94.8 77.2 22.1-83.3zM159.3 174.6l-134.5-31.7 20 25.2 60.1 7.2 24.9-52.6zM159.3 174.6l134.5-31.7-20 25.2-60.1 7.2-24.9-52.6z"/>
+                                <path fill="#D7C1B3" stroke="#D7C1B3" stroke-linecap="round" stroke-linejoin="round" d="M69.6 122.9l52.6-24.9 37.1 76.6zM249 122.9l-52.6-24.9-37.1 76.6z"/>
+                                <path fill="#233447" stroke="#233447" stroke-linecap="round" stroke-linejoin="round" d="M122.2 98l37.1 76.6-37.1 7.2zM196.4 98l-37.1 76.6 37.1 7.2z"/>
+                                <path fill="#CDC1B3" stroke="#CDC1B3" stroke-linecap="round" stroke-linejoin="round" d="M89.6 168.1l-64.8-25.2 60.1 7.2zM229 168.1l64.8-25.2-60.1 7.2z"/>
+                                <path fill="#E4751F" stroke="#E4751F" stroke-linecap="round" stroke-linejoin="round" d="M159.3 189.5l-69.7-21.4 69.7-18 69.7 18z"/>
+                                <path fill="#F2A900" stroke="#F2A900" stroke-linecap="round" stroke-linejoin="round" d="M159.3 189.5l-69.7-21.4 10.6 57 59.1-35.6zM159.3 189.5l69.7-21.4-10.6 57-59.1-35.6z"/>
+                                <path fill="#C0AD9E" stroke="#C0AD9E" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l-20-47 10.6 47zM229 225.1l20-47-10.6 47z"/>
+                                <path fill="#161616" stroke="#161616" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l69.7 35.6 69.7-35.6-10.6-57-59.1 35.6z"/>
+                                <path fill="#763D16" stroke="#763D16" stroke-linecap="round" stroke-linejoin="round" d="M298.8 142.9l-24.4 71.9 9.6-46.7zM19.8 142.9l24.4 71.9-9.6-46.7z"/>
+                                <path fill="#E4751F" stroke="#E4751F" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l10.6-57-10.6-45.2-64.8 45.2zM229 225.1l-10.6-57 10.6-45.2 64.8 45.2z"/>
+                                <path fill="#F2A900" stroke="#F2A900" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l69.7 58.7-25.2-58.7zM229 225.1l-69.7 58.7 25.2-58.7z"/>
+                                <path fill="#D7C1B3" stroke="#D7C1B3" stroke-linecap="round" stroke-linejoin="round" d="M229 225.1l-69.7 35.6-25.2-35.6zM89.6 225.1l69.7 35.6 25.2-35.6z"/>
+                            </svg>
+                            <span>MetaMask Account</span>
+                        </div>
+                        <div id="mm-status" class="order-badge sell" style="background-color: rgba(217, 48, 37, 0.1); border-color: rgba(217, 48, 37, 0.25); color: var(--google-red); font-size: 8px;">Disconnected</div>
+                    </div>
+                    <div id="mm-address-box" style="display: none; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-main); word-break: break-all;">
+                        <span style="color: var(--text-dark);">Account:</span> <span id="mm-address-val" style="font-weight: 600; cursor: pointer; text-decoration: underline;" onclick="copyMMAddress()">0x...</span>
+                        <div id="mm-network-val" style="font-size: 9px; color: var(--text-dark); margin-top: 2px;">Network: Unknown</div>
+                    </div>
+                    <button id="mm-connect-btn" class="submit-btn" style="background-color: #E2761B; margin-top: 0; padding: 8px; font-size: 11px; color: white;" onclick="handleMetaMaskClick()">Connect MetaMask</button>
+                </div>
+
                 <div class="wallet-balances">
                     <!-- USD Balance -->
                     <div class="balance-row">
@@ -1673,6 +1704,23 @@
             updateWalletUI();
             updateWalletHistoryUI();
 
+            // MetaMask Auto-Reconnect
+            const savedMMAddress = localStorage.getItem('mmConnectedAddress');
+            if (savedMMAddress && typeof window.ethereum !== 'undefined') {
+                window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+                    if (accounts.length > 0 && accounts[0] === savedMMAddress) {
+                        window.ethereum.request({ method: 'eth_chainId' }).then(chainId => {
+                            fetchMetaMaskBalance(savedMMAddress, chainId);
+                            setupMetaMaskListeners();
+                        });
+                    } else {
+                        localStorage.removeItem('mmConnectedAddress');
+                    }
+                }).catch(() => {
+                    localStorage.removeItem('mmConnectedAddress');
+                });
+            }
+
             loadSymbols();
             updatePlacedOrdersUI();
             startPollingMetrics();
@@ -2237,6 +2285,161 @@
                 item.style.animation = 'toastIn 0.2s cubic-bezier(0.4, 0, 1, 1) reverse forwards';
                 setTimeout(() => item.remove(), 200);
             }, 3500);
+        }
+
+        // --- METAMASK WALLET CONNECTOR LOGIC ---
+        let mmListenersSetup = false;
+
+        function getNetworkName(chainId) {
+            const id = parseInt(chainId, 16) || parseInt(chainId);
+            switch (id) {
+                case 1: return 'Ethereum Mainnet';
+                case 5: return 'Goerli Testnet';
+                case 11155111: return 'Sepolia Testnet';
+                case 137: return 'Polygon';
+                case 56: return 'BNB Chain';
+                case 43114: return 'Avalanche';
+                case 42161: return 'Arbitrum One';
+                case 10: return 'Optimism';
+                default: return `Chain ID: ${id}`;
+            }
+        }
+
+        function handleMetaMaskClick() {
+            if (typeof window.ethereum === 'undefined') {
+                showToastAlert('MetaMask Not Found', 'MetaMask is not installed. Redirecting to download page...', 'error');
+                window.open('https://metamask.io/download/', '_blank');
+                return;
+            }
+            
+            const currentAddress = localStorage.getItem('mmConnectedAddress');
+            if (currentAddress) {
+                disconnectMetaMask();
+            } else {
+                connectMetaMask();
+            }
+        }
+
+        async function connectMetaMask() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (accounts.length === 0) return;
+                
+                const address = accounts[0];
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                
+                localStorage.setItem('mmConnectedAddress', address);
+                
+                showToastAlert('Wallet Connected', `Connected MetaMask account ${address.substring(0, 6)}...${address.substring(address.length - 4)}`, 'success');
+                
+                fetchMetaMaskBalance(address, chainId);
+                setupMetaMaskListeners();
+            } catch (err) {
+                console.error(err);
+                showToastAlert('Connection Failed', err.message || 'User rejected request', 'error');
+            }
+        }
+
+        async function fetchMetaMaskBalance(address, chainId) {
+            try {
+                const balanceWei = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [address, 'latest']
+                });
+                
+                const balanceEth = parseFloat(parseInt(balanceWei, 16) / 1e18);
+                
+                updateMetaMaskUI(address, chainId, balanceEth);
+                
+                // Sync our local mock ETH wallet with MetaMask
+                const balances = getWalletBalances();
+                balances.ETH.available = balanceEth;
+                saveWalletBalances(balances);
+                updateWalletUI();
+                
+                addWalletTransaction('METAMASK_SYNC', 'ETH', balanceEth, 'Confirmed', 'sync-' + Date.now());
+            } catch (err) {
+                console.error("Failed to fetch balance", err);
+                updateMetaMaskUI(address, chainId, null);
+            }
+        }
+
+        function updateMetaMaskUI(address, chainId, balance) {
+            const mmStatus = document.getElementById('mm-status');
+            const mmAddressBox = document.getElementById('mm-address-box');
+            const mmAddressVal = document.getElementById('mm-address-val');
+            const mmNetworkVal = document.getElementById('mm-network-val');
+            const mmConnectBtn = document.getElementById('mm-connect-btn');
+            
+            mmStatus.className = 'order-badge buy';
+            mmStatus.innerText = 'Connected';
+            mmStatus.style.backgroundColor = 'rgba(24, 128, 56, 0.1)';
+            mmStatus.style.borderColor = 'rgba(24, 128, 56, 0.2)';
+            mmStatus.style.color = 'var(--google-green)';
+            
+            mmAddressBox.style.display = 'block';
+            mmAddressVal.innerText = `${address.substring(0, 10)}...${address.substring(address.length - 8)}`;
+            mmAddressVal.title = address;
+            
+            const networkName = getNetworkName(chainId);
+            const balanceText = balance !== null ? `${balance.toFixed(4)} ETH` : 'Loading...';
+            mmNetworkVal.innerText = `Network: ${networkName} | Balance: ${balanceText}`;
+            
+            mmConnectBtn.innerText = 'Disconnect Wallet';
+            mmConnectBtn.style.backgroundColor = 'var(--text-dark)';
+        }
+
+        function setupMetaMaskListeners() {
+            if (mmListenersSetup || typeof window.ethereum === 'undefined') return;
+            
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    disconnectMetaMask();
+                } else {
+                    const address = accounts[0];
+                    localStorage.setItem('mmConnectedAddress', address);
+                    window.ethereum.request({ method: 'eth_chainId' }).then(chainId => {
+                        fetchMetaMaskBalance(address, chainId);
+                    });
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                const address = localStorage.getItem('mmConnectedAddress');
+                if (address) {
+                    fetchMetaMaskBalance(address, chainId);
+                }
+            });
+            
+            mmListenersSetup = true;
+        }
+
+        function disconnectMetaMask() {
+            localStorage.removeItem('mmConnectedAddress');
+            
+            const mmStatus = document.getElementById('mm-status');
+            const mmAddressBox = document.getElementById('mm-address-box');
+            const mmConnectBtn = document.getElementById('mm-connect-btn');
+            
+            mmStatus.className = 'order-badge sell';
+            mmStatus.innerText = 'Disconnected';
+            mmStatus.style.backgroundColor = 'rgba(217, 48, 37, 0.1)';
+            mmStatus.style.borderColor = 'rgba(217, 48, 37, 0.25)';
+            mmStatus.style.color = 'var(--google-red)';
+            
+            mmAddressBox.style.display = 'none';
+            mmConnectBtn.innerText = 'Connect MetaMask';
+            mmConnectBtn.style.backgroundColor = '#E2761B';
+            
+            showToastAlert('Wallet Disconnected', 'MetaMask disconnected.', 'error');
+        }
+
+        function copyMMAddress() {
+            const address = localStorage.getItem('mmConnectedAddress');
+            if (address) {
+                navigator.clipboard.writeText(address);
+                showToastAlert('Address Copied', 'Wallet address copied to clipboard.', 'success');
+            }
         }
     </script>
 </body>
