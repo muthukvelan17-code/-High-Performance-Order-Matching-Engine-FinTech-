@@ -1,0 +1,11 @@
+{
+  "name": "ultra-low-latency-trading-engine",
+  "version": "1.0.0",
+  "description": "NPM scripts task runner using local Maven",
+  "scripts": {
+    "build": ".maven\\bin\\mvn.cmd package -DskipTests",
+    "dev": ".maven\\bin\\mvn.cmd -f trading-engine-app/pom.xml clean spring-boot:run -am",
+    "start": "npm run build && npm run dev",
+    "clean": "taskkill /F /IM java.exe /T 2>nul & del /F /Q trading-engine-app\\*.dat 2>nul & echo Clean completed!"
+  }
+}

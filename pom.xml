@@ -34,6 +34,7 @@
         <agrona.version>1.21.1</agrona.version>
         <lombok.version>1.18.30</lombok.version>
         <thread.affinity.version>3.23.3</thread.affinity.version>
+        <os.detected.classifier>windows-x86_64</os.detected.classifier>
     </properties>
 
     <dependencyManagement>

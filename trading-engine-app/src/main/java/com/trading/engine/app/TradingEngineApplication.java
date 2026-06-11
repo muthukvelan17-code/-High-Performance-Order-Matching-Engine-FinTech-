@@ -16,8 +16,6 @@ import java.io.IOException;
 @SpringBootApplication(scanBasePackages = "com.trading.engine")
 public class TradingEngineApplication {
 
-    @Value("${trading.bot.enabled:false}")
-    private boolean botEnabled;
 
     public static void main(String[] args) {
         fixChronicleClasspath();
@@ -104,19 +102,6 @@ public class TradingEngineApplication {
                     System.out.println("Starting gRPC server on port 9090...");
                     server.start();
 
-                    if (botEnabled) {
-                        Thread.ofVirtual().name("Bot-Starter").start(() -> {
-                            try {
-                                // Wait 1 second for the server to be fully ready
-                                Thread.sleep(1000);
-                                System.out.println("Auto-starting Liquidity Provider Bot inside Java 21 Virtual Threads...");
-                                LiquidityProviderBot bot = new LiquidityProviderBot("localhost", 9090);
-                                bot.start();
-                            } catch (Exception ex) {
-                                System.err.println("Failed to auto-start trading bot: " + ex.getMessage());
-                            }
-                        });
-                    }
 
                     server.awaitTermination();
                 } catch (Exception e) {
