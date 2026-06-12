@@ -3,7 +3,6 @@ package com.trading.engine.core;
 import com.lmax.disruptor.BusySpinWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import com.lmax.disruptor.util.DaemonThreadFactory;
 import com.trading.engine.core.engine.*;
 import com.trading.engine.core.event.OrderEvent;
 import com.trading.engine.core.event.OrderEventFactory;
@@ -25,7 +24,7 @@ public class TradingEngine {
         int bufferSize = 1024 * 64; // Must be power of 2
         this.disruptor = new Disruptor<>(
                 new OrderEventFactory(),
-                65536,
+                bufferSize,
                 new AffinityThreadFactory("TradingEngine", true, AffinityStrategies.SAME_SOCKET),
                 ProducerType.SINGLE,
                 new BusySpinWaitStrategy()

@@ -2,7 +2,6 @@ package com.trading.engine.core.engine;
 
 import com.trading.engine.core.model.Order;
 import com.trading.engine.core.model.OrderSide;
-import com.trading.engine.core.model.OrderStatus;
 import com.trading.engine.core.model.Trade;
 import org.agrona.collections.Long2ObjectHashMap;
 import java.util.*;
