@@ -1,12 +1,12 @@
 # ⚡ Order Matching Engine - Verification & Localhost Deployment Report
 
-This report documents the verification, code warning cleanup, and local execution of the **Ultra-Low-Latency Order Matching Engine** conducted on **June 4th, 2026** and **June 14th, 2026**.
+This report summarizes the verification, warning-resolution activities,and successful local execution of the Ultra-Low-Latency Order Matching Engine performed on June 4,2026, and June 14,2026.
 
 ---
 
 ## 🏛️ System Architecture Overview
 
-The system is designed as a lock-free, single-writer trading core leveraging modern Java concurrency and memory APIs to match order flows under sub-millisecond latencies.
+The system employs a lock -free, single-writer architecture and leverages modern java concurrency and memory APIs to achieve effecient order matching with sub-millisecond latency.
 
 ```mermaid
 graph TD
@@ -20,34 +20,32 @@ graph TD
 ```
 
 ### 🏎️ Key Features
-1. **LMAX Disruptor Ring Buffer:** Asynchronously ingests orders into lock-free ring buffers.
-2. **OpenHFT Thread Affinity:** Binds critical execution threads to specific physical CPU cores to eliminate context-switching.
-3. **Chronicle Map Persistence:** Off-heap key-value storage allows Zero-GC pauses and records active states asynchronously to disk.
-
+1. **LMAX Disruptor Ring Buffer:** Utilizes lock-free ring buffers to asynchronously ingest and process incoming orders with minimal latency.
+2. **OpenHFT Thread Affinity:** Binds critical processing threads to dedicated physical CPU cores, reducing context -switch overhead and improving execution consistency.
+3. **Chronicle Map Persistence:** Provides off-heap key -value storage to minimize garbage collection (GC) pauses and asynchronously persist active state data to disk
 ---
 
 ## 🧹 Code Quality & Warning Remediation
 
-To ensure the project imports cleanly and has zero compilation or IDE editor warnings, the following improvements were made:
+To ensure the project imports cleanly and remains free of compilation and IDE warnings, the following improvements were implemented:
 
-### 1. XML Schema Location Corrections
-*   **`benchmarking-module/pom.xml`**: Corrected the XML schema URL from `http://maven.apache.org/xsd/xsi-instance` to the standard schema location `http://maven.apache.org/xsd/maven-4.0.0.xsd`. This resolves XML validation errors in IntelliJ/VS Code.
-
+### 1. XML Schema Location Correction
+*   **`benchmarking-module/pom.xml`**: Corrected the XML schema URL from `http://maven.apache.org/xsd/xsi-instance` to the standard schema location `http://maven.apache.org/xsd/maven-4.0.0.xsd`, resolving XML validation errors in IntelliJ IDEA and Visual Studio Code.
 ### 2. Redundant & Unused Imports Cleanup
-*   **`TradingServiceImpl.java`**: Removed 6 redundant same-package imports (`com.trading.engine.grpc.OrderRequest`, `OrderResponse`, etc.) that were triggering compiler warnings.
+*   **`TradingServiceImpl.java`**: Removed six redundant same-package imports (`OrderRequest`, `OrderResponse`, etc.) that were generating  compiler warnings.
 *   **`TradingEngine.java`**: Removed the unused `java.util.concurrent.Executors` import.
 
 ### 3. Serialization Warnings
-*   **`Order.java`**: Added the missing `private static final long serialVersionUID = 1L;` field to the class to resolve serializable warning diagnostics.
+*   **`Order.java`**: Added the missing `private static final long serialVersionUID = 1L;` field to resolve serialization - warning diagnostics.
 
-### 4. Static Analysis Flow & Null Pointer Prevention
-*   **`MatchingEngineHandler.java`**: Refactored the `onEvent` method to store `event.getOrder()` in a local variable `order` and return early if null. This eliminates potential null pointer dereference warnings when accessing order properties later in the switch statement.
-*   **`RiskValidationHandler.java`**: Added a safe null-check before dereferencing order properties.
-*   **`JournalingHandler.java`**: Added a safe null-check before passing the order to the persistence journaler.
+### 4. Static Analysis Improvements and Null -Safety Enhancements
+*   **`MatchingEngineHandler.java`**: Refactored the `onEvent` method to store `event.getOrder()` in a local variable and perform  an early retuen when the value is null.This eliminates potential null pointer dereference warnings when accessing order properties within the witch statement.
+*   **`RiskValidationHandler.java`**: Added a null check before accessing order properties to improve runtime safety and satisfy static analysis requirements.
+*   **`JournalingHandler.java`**: Added a null check before passing the order to the persistence journaler preventing potential null-pointer exceptions.
 
 ---
 
-## 🧪 Verification Unit Tests
+## 🧪  Unit Test Verification 
 
 All unit tests compiled cleanly and passed successfully:
 ```log
@@ -59,15 +57,15 @@ All unit tests compiled cleanly and passed successfully:
 
 > [!IMPORTANT]
 > **Windows File Lock Note:**
-> On Windows, if a Maven build with `clean` fails due to locked files (usually under `target/protoc-dependencies` because the VS Code Java Language Server is actively indexing generated directories), simply run `mvn compile` or `mvn test` without the `clean` goal. Alternatively, closing VS Code or restarting the Java Language Server will release the locks.
+> On Windows, Maven builds that use the `clean`goal may fail if files within`target/protoc-dependencies` are  locked by VS Code Java Language Server during indexing.If this occurs, run mvn compile or mvn test without `clean`,or restart the Java Language Server(or VS Code) to release the lock.
 
 ---
 
 ## 🖥️ Localhost Execution Status
 
-The application is fully prepared and executes successfully using the embedded Maven wrapper:
-*   **Tomcat Web Dashboard:** Active on **[http://localhost:8080](http://localhost:8080)**.
-*   **gRPC Ingestion Server:** Active on port **`9090`**.
+The application is fully configured and runs successfully using the embedded Maven Wrapper.
+*   **Tomcat Web Dashboard:** Available at **[http://localhost:8080](http://localhost:8080)**.
+*   **gRPC Ingestion Server:** Listening on port **`9090`**.
 
 To build and launch the engine:
 ```powershell
@@ -75,11 +73,12 @@ To build and launch the engine:
 .\run.bat
 ```
 
----
+--- 
+## 📈 June 14th, 2026 - Verification & Repository Synchronization Update
 
-## 📈 June 14th, 2026 - Verification & Sync Update
-
-As part of the deployment verification conducted today, the following steps were completed:
-1. **Full Module Compilation**: Executed Maven compilation and packaging of all modules (`matching-engine-core`, `market-data-service`, `grpc-server`, etc.), resulting in a successful build snapshot.
-2. **Localhost Startup**: Successfully launched the Spring Boot Web Controller and Disruptor Ring Buffer. Verified active server endpoints on port `8080` (HTTP web dashboard) and the gRPC ingestion server on port `9090`.
-3. **Repository Synchronization**: Pulled latest updates and verified repository alignment with the remote GitHub repository (`-High-Performance-Order-Matching-Engine-FinTech-`).
+As part of the deployment verification conducted on June 14,2026, the following acivities were completed: 
+1. **Full Module Compilation**: Successfully executed Maven compilation and packaging across all modules (matching-engine-core, market-data-service, grpc-server,etc) resulting in a successful build without compilation errors.
+2. **Localhost Startup Verification**: Successfully launched the Spring Boot application, including the Web Controller and Disruptor Ring Buffer. Verified that:
+    The HTTP web dashboard is accessible on port 8080
+    The gRPC ingestion server is active and listening on port 9090
+3. **Repository Synchronization**: Pulled the latest changes from the remote GitHub repository (`-High-Performance-Order-Matching-Engine-FinTech-`) and verified that the local repository is fully synchronized with the remote branch.
