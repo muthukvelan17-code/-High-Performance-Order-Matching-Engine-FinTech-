@@ -1,442 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compactible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>MetaMask Web3 Wallet Connector</title>
-    <!-- Google Fonts for premium typography -->
+
+    <!--Google Fonts for premium typography-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --bg-dark: #0b0f19;
-            --bg-card: rgba(17, 24, 39, 0.7);
-            --border-glow: rgba(226, 118, 27, 0.15);
-            --primary: #e2761b;
-            --primary-hover: #f5841f;
-            --primary-glow: rgba(226, 118, 27, 0.4);
-            
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --text-success: #10b981;
-            --text-danger: #ef4444;
-            --text-warning: #f59e0b;
-            
-            --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-            
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+</head>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<style>
+    :root {
+        --bg-dark: #0b0f19;
+        --bg-card: rgba(17, 24, 39, 0.7);
+        --border-glow: rgba(226, 118, 27, 0.15);
+        --primary: #e2761b;
+        --primary-hover: #f5841f;
+        --primary-glow: rgba(226, 118, 27, 0.4);
 
-        body {
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(226, 118, 27, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
-            color: var(--text-main);
-            font-family: var(--font-outfit);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow-x: hidden;
-        }
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --text-success: #10b981;
+        --text-danger: #ef4444;
+        --text-warning: #f59e0b;
 
-        /* Container & Glassmorphism Card */
-        .glass-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            width: 100%;
-            max-width: 540px;
-            padding: 40px;
-            box-shadow: 
-                0 20px 50px rgba(0, 0, 0, 0.4),
-                0 0 40px var(--border-glow);
-            position: relative;
-            overflow: hidden;
-            transition: var(--transition);
-        }
+        --font-outfit: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
 
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-color: var(--bg-dark);
+        background-image:
+            radial-gradient(at 0% 0%, rgba(226, 118, 27, 0.08) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+        color: var(--text-main);
+        font-family: var(--font-outfit);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        overflow-x: hidden;
+    }
+
+    /* Container & Glassmorphism Card */
+    .glass-card {
+        background: var(--bg-card);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        width: 100%;
+        max-width: 540px;
+        padding: 40px;
+        box-shadow:
+            0 20px 50px rgba(0, 0, 0, 0.4),
+            0 0 40px var(--border-glow);
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
                 transparent,
                 rgba(255, 255, 255, 0.05),
-                transparent
-            );
-            transition: 0.5s;
-        }
+                transparent);
+        transition: 0.5s;
+    }
 
-        .glass-card:hover::before {
-            left: 100%;
-            transition: 0.7s;
-        }
+    .glass-card:hover::before {
+        left: 100%;
+        transition: 0.7s;
+    }
 
-        /* Header Styles */
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
+    /* Header Styles */
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        position: relative;
+    }
 
-        .logo-container {
-            width: 90px;
-            height: 90px;
-            margin: 0 auto 16px auto;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    .logo-container {
+        width: 90px;
+        height: 90px;
+        margin: 0 auto 16px auto;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-        .logo-glow {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-            z-index: 1;
-            animation: pulse 3s infinite alternate;
-        }
+    .logo-glow {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+        z-index: 1;
+        animation: pulse 3s infinite alternate;
+    }
 
-        .logo-img {
-            width: 70px;
-            height: 70px;
-            z-index: 2;
-            transition: var(--transition);
-        }
+    .logo-img {
+        width: 70px;
+        height: 70px;
+        z-index: 2;
+        transition: var(--transition);
+    }
 
-        .logo-container:hover .logo-img {
-            transform: scale(1.1) rotate(5deg);
-        }
+    .logo-container:hover .logo-img {
+        transform: scale(1.1) rotate(5deg);
+    }
 
-        h1 {
-            font-size: 26px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
-            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    h1 {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        margin-bottom: 6px;
+        background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-        .subtitle {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
+    .subtitle {
+        font-size: 14px;
+        color: var(--text-muted);
+    }
 
-        /* Status & Connection Panel */
-        .connection-panel {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+    /* Status & Connection Panel */
+    .connection-panel {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
 
-        .status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 12px;
-        }
+    .status-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 12px;
+    }
 
-        .status-label {
-            font-size: 12px;
-            text-transform: uppercase;
-            font-weight: 600;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-        }
+    .status-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+    }
 
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 6px 14px;
-            border-radius: 20px;
-            transition: var(--transition);
-        }
+    .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 20px;
+        transition: var(--transition);
+    }
 
-        .status-badge.disconnected {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--text-danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
+    .status-badge.disconnected {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--text-danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
 
-        .status-badge.connected {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--text-success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
+    .status-badge.connected {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--text-success);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
 
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: currentColor;
-            display: inline-block;
-        }
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: currentColor;
+        display: inline-block;
+    }
 
-        .status-badge.connected .dot {
-            animation: pulse-dot 1.5s infinite;
-        }
+    .status-badge.connected .dot {
+        animation: pulse-dot 1.5s infinite;
+    }
 
-        /* Info Fields */
-        .info-row {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+    /* Info Fields */
+    .info-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
 
-        .info-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .info-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
-        .info-val {
-            font-size: 15px;
-            font-family: var(--font-mono);
-            color: var(--text-main);
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            padding: 10px 14px;
-            word-break: break-all;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: var(--transition);
-        }
+    .info-val {
+        font-size: 15px;
+        font-family: var(--font-mono);
+        color: var(--text-main);
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        padding: 10px 14px;
+        word-break: break-all;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: var(--transition);
+    }
 
-        .info-val.interactive:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            background: rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-        }
+    .info-val.interactive:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+    }
 
-        .copy-icon {
+    .copy-icon {
+        opacity: 0.5;
+        transition: var(--transition);
+    }
+
+    .info-val.interactive:hover .copy-icon {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Network & Balance Grid */
+    .grid-half {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    /* Button Styling */
+    .btn {
+        width: 100%;
+        padding: 16px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: var(--font-outfit);
+        color: #fff;
+        background: linear-gradient(135deg, var(--primary) 0%, #c45b0a 100%);
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 10px 20px rgba(226, 118, 27, 0.2);
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .btn:hover {
+        background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px var(--primary-glow);
+    }
+
+    .btn:active {
+        transform: translateY(1px);
+    }
+
+    .btn.disconnect-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: none;
+    }
+
+    .btn.disconnect-btn:hover {
+        background: rgba(239, 68, 68, 0.08);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--text-danger);
+        box-shadow: none;
+    }
+
+    /* Console/Logs section */
+    .logs-section {
+        margin-top: 30px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 20px;
+    }
+
+    .logs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .logs-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .clear-logs-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .clear-logs-btn:hover {
+        color: var(--text-main);
+    }
+
+    .console-box {
+        background: #05070c;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 10px;
+        height: 120px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: #10b981;
+        padding: 12px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        line-height: 1.5;
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 1000;
+        max-width: 400px;
+    }
+
+    .toast {
+        background: rgba(17, 24, 39, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 16px 20px;
+        min-width: 280px;
+        max-width: 380px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .toast.success {
+        border-left: 4px solid var(--text-success);
+    }
+
+    .toast.error {
+        border-left: 4px solid var(--text-danger);
+    }
+
+    .toast.info {
+        border-left: 4px solid #3b82f6;
+    }
+
+    .toast-content {
+        font-size: 13px;
+    }
+
+    .toast-close {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .toast-close:hover {
+        color: var(--text-main);
+    }
+
+    /* Keyframe Animations */
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
             opacity: 0.5;
-            transition: var(--transition);
         }
 
-        .info-val.interactive:hover .copy-icon {
+        100% {
+            transform: scale(1.05);
+            opacity: 0.8;
+        }
+    }
+
+    @keyframes pulse-dot {
+        0% {
+            transform: scale(0.85);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+        }
+
+        100% {
+            transform: scale(0.85);
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%) translateY(0);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0) translateY(0);
             opacity: 1;
-            transform: scale(1.1);
+        }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+        .glass-card {
+            padding: 24px;
         }
 
-        /* Network & Balance Grid */
         .grid-half {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: 1fr;
         }
-
-        /* Button Styling */
-        .btn {
-            width: 100%;
-            padding: 16px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: var(--font-outfit);
-            color: #fff;
-            background: linear-gradient(135deg, var(--primary) 0%, #c45b0a 100%);
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 10px 20px rgba(226, 118, 27, 0.2);
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .btn:hover {
-            background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px var(--primary-glow);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .btn.disconnect-btn {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: none;
-        }
-
-        .btn.disconnect-btn:hover {
-            background: rgba(239, 68, 68, 0.08);
-            border-color: rgba(239, 68, 68, 0.3);
-            color: var(--text-danger);
-            box-shadow: none;
-        }
-
-        /* Console/Logs section */
-        .logs-section {
-            margin-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 20px;
-        }
-
-        .logs-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .logs-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .clear-logs-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
-        .clear-logs-btn:hover {
-            color: var(--text-main);
-        }
-
-        .console-box {
-            background: #05070c;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 10px;
-            height: 120px;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: #10b981;
-            padding: 12px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            line-height: 1.5;
-        }
-
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 1000;
-        }
-
-        .toast {
-            background: rgba(17, 24, 39, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px 20px;
-            min-width: 280px;
-            max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .toast.success {
-            border-left: 4px solid var(--text-success);
-        }
-
-        .toast.error {
-            border-left: 4px solid var(--text-danger);
-        }
-
-        .toast.info {
-            border-left: 4px solid #3b82f6;
-        }
-
-        .toast-content {
-            font-size: 13px;
-        }
-
-        .toast-close {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .toast-close:hover {
-            color: var(--text-main);
-        }
-
-        /* Keyframe Animations */
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.5; }
-            100% { transform: scale(1.05); opacity: 0.8; }
-        }
-
-        @keyframes pulse-dot {
-            0% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%) translateY(0); opacity: 0; }
-            to { transform: translateX(0) translateY(0); opacity: 1; }
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .glass-card {
-                padding: 24px;
-            }
-            .grid-half {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
+
 <body>
 
     <div class="glass-card">
@@ -446,19 +479,32 @@
                 <div class="logo-glow"></div>
                 <!-- MetaMask Fox SVG -->
                 <svg class="logo-img" viewBox="0 0 318.6 318.6">
-                    <path fill="#e2761b" stroke="#e2761b" stroke-linecap="round" stroke-linejoin="round" d="M274.4 35.8L159.3 1.1 44.2 35.8 24.8 142.9l134.5 31.7 134.5-31.7z"/>
-                    <path fill="#e4761b" stroke="#e4761b" stroke-linecap="round" stroke-linejoin="round" d="M159.3 1.1L44.2 35.8l94.8 77.2-22-83.3zM159.3 1.1l115.1 34.7-94.8 77.2 22.1-83.3zM159.3 174.6l-134.5-31.7 20 25.2 60.1 7.2 24.9-52.6zM159.3 174.6l134.5-31.7-20 25.2-60.1 7.2-24.9-52.6z"/>
-                    <path fill="#d7c1b3" stroke="#d7c1b3" stroke-linecap="round" stroke-linejoin="round" d="M69.6 122.9l52.6-24.9 37.1 76.6zM249 122.9l-52.6-24.9-37.1 76.6z"/>
-                    <path fill="#233447" stroke="#233447" stroke-linecap="round" stroke-linejoin="round" d="M122.2 98l37.1 76.6-37.1 7.2zM196.4 98l-37.1 76.6 37.1 7.2z"/>
-                    <path fill="#cdc1b3" stroke="#cdc1b3" stroke-linecap="round" stroke-linejoin="round" d="M89.6 168.1l-64.8-25.2 60.1 7.2zM229 168.1l64.8-25.2-60.1 7.2z"/>
-                    <path fill="#e4751f" stroke="#e4751f" stroke-linecap="round" stroke-linejoin="round" d="M159.3 189.5l-69.7-21.4 69.7-18 69.7 18z"/>
-                    <path fill="#f2a900" stroke="#f2a900" stroke-linecap="round" stroke-linejoin="round" d="M159.3 189.5l-69.7-21.4 10.6 57 59.1-35.6zM159.3 189.5l69.7-21.4-10.6 57-59.1-35.6z"/>
-                    <path fill="#c0ad9e" stroke="#c0ad9e" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l-20-47 10.6 47zM229 225.1l20-47-10.6 47z"/>
-                    <path fill="#161616" stroke="#161616" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l69.7 35.6 69.7-35.6-10.6-57-59.1 35.6z"/>
-                    <path fill="#763d16" stroke="#763d16" stroke-linecap="round" stroke-linejoin="round" d="M298.8 142.9l-24.4 71.9 9.6-46.7zM19.8 142.9l24.4 71.9-9.6-46.7z"/>
-                    <path fill="#e4751f" stroke="#e4751f" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l10.6-57-10.6-45.2-64.8 45.2zM229 225.1l-10.6-57 10.6-45.2 64.8 45.2z"/>
-                    <path fill="#f2a900" stroke="#f2a900" stroke-linecap="round" stroke-linejoin="round" d="M89.6 225.1l69.7 58.7-25.2-58.7zM229 225.1l-69.7 58.7 25.2-58.7z"/>
-                    <path fill="#d7c1b3" stroke="#d7c1b3" stroke-linecap="round" stroke-linejoin="round" d="M229 225.1l-69.7 35.6-25.2-35.6zM89.6 225.1l69.7 35.6 25.2-35.6z"/>
+                    <path fill="#e2761b" stroke="#e2761b" stroke-linecap="round" stroke-linejoin="round"
+                        d="M274.4 35.8L159.3 1.1 44.2 35.8 24.8 142.9l134.5 31.7 134.5-31.7z" />
+                    <path fill="#e4761b" stroke="#e4761b" stroke-linecap="round" stroke-linejoin="round"
+                        d="M159.3 1.1L44.2 35.8l94.8 77.2-22-83.3zM159.3 1.1l115.1 34.7-94.8 77.2 22.1-83.3zM159.3 174.6l-134.5-31.7 20 25.2 60.1 7.2 24.9-52.6zM159.3 174.6l134.5-31.7-20 25.2-60.1 7.2-24.9-52.6z" />
+                    <path fill="#d7c1b3" stroke="#d7c1b3" stroke-linecap="round" stroke-linejoin="round"
+                        d="M69.6 122.9l52.6-24.9 37.1 76.6zM249 122.9l-52.6-24.9-37.1 76.6z" />
+                    <path fill="#233447" stroke="#233447" stroke-linecap="round" stroke-linejoin="round"
+                        d="M122.2 98l37.1 76.6-37.1 7.2zM196.4 98l-37.1 76.6 37.1 7.2z" />
+                    <path fill="#cdc1b3" stroke="#cdc1b3" stroke-linecap="round" stroke-linejoin="round"
+                        d="M89.6 168.1l-64.8-25.2 60.1 7.2zM229 168.1l64.8-25.2-60.1 7.2z" />
+                    <path fill="#e4751f" stroke="#e4751f" stroke-linecap="round" stroke-linejoin="round"
+                        d="M159.3 189.5l-69.7-21.4 69.7-18 69.7 18z" />
+                    <path fill="#f2a900" stroke="#f2a900" stroke-linecap="round" stroke-linejoin="round"
+                        d="M159.3 189.5l-69.7-21.4 10.6 57 59.1-35.6zM159.3 189.5l69.7-21.4-10.6 57-59.1-35.6z" />
+                    <path fill="#c0ad9e" stroke="#c0ad9e" stroke-linecap="round" stroke-linejoin="round"
+                        d="M89.6 225.1l-20-47 10.6 47zM229 225.1l20-47-10.6 47z" />
+                    <path fill="#161616" stroke="#161616" stroke-linecap="round" stroke-linejoin="round"
+                        d="M89.6 225.1l69.7 35.6 69.7-35.6-10.6-57-59.1 35.6z" />
+                    <path fill="#763d16" stroke="#763d16" stroke-linecap="round" stroke-linejoin="round"
+                        d="M298.8 142.9l-24.4 71.9 9.6-46.7zM19.8 142.9l24.4 71.9-9.6-46.7z" />
+                    <path fill="#e4751f" stroke="#e4751f" stroke-linecap="round" stroke-linejoin="round"
+                        d="M89.6 225.1l10.6-57-10.6-45.2-64.8 45.2zM229 225.1l-10.6-57 10.6-45.2 64.8 45.2z" />
+                    <path fill="#f2a900" stroke="#f2a900" stroke-linecap="round" stroke-linejoin="round"
+                        d="M89.6 225.1l69.7 58.7-25.2-58.7zM229 225.1l-69.7 58.7 25.2-58.7z" />
+                    <path fill="#d7c1b3" stroke="#d7c1b3" stroke-linecap="round" stroke-linejoin="round"
+                        d="M229 225.1l-69.7 35.6-25.2-35.6zM89.6 225.1l69.7 35.6 25.2-35.6z" />
                 </svg>
             </div>
             <h1>MetaMask Connect</h1>
@@ -480,7 +526,8 @@
                 <span class="info-label">Account Address</span>
                 <div id="address-box" class="info-val" title="Click to copy address">
                     <span id="address-val">0x0000000000000000000000000000000000000000</span>
-                    <svg class="copy-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg class="copy-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                     </svg>
@@ -503,7 +550,9 @@
         <!-- Action Button -->
         <button id="connect-btn" class="btn">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"></path>
+                <path
+                    d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10">
+                </path>
             </svg>
             <span>Connect Wallet</span>
         </button>
@@ -515,7 +564,7 @@
                 <button class="clear-logs-btn" onclick="clearConsole()">Clear Logs</button>
             </div>
             <div id="console" class="console-box">Initializing Terminal...
-Listening for window.ethereum...</div>
+                Listening for window.ethereum...</div>
         </div>
     </div>
 
@@ -662,7 +711,7 @@ Listening for window.ethereum...</div>
             } catch (err) {
                 connectBtn.disabled = false;
                 connectBtn.querySelector('span').innerText = 'Connect Wallet';
-                
+
                 if (err.code === 4001) {
                     showToast("User Rejected Request", "Please accept the permission request in MetaMask to connect.", "error");
                     writeToConsole("User rejected connection request.");
@@ -692,7 +741,7 @@ Listening for window.ethereum...</div>
             addressBox.classList.remove('interactive');
             networkVal.innerText = "Disconnected";
             balanceVal.innerText = "0.0000 ETH";
-            
+
             connectBtn.innerHTML = `
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"></path>
@@ -710,11 +759,11 @@ Listening for window.ethereum...</div>
                     method: 'eth_getBalance',
                     params: [address, 'latest']
                 });
-                
+
                 // Convert Hex Wei to Float Ether
                 const balanceWei = parseInt(balanceWeiHex, 16);
                 const balanceEth = balanceWei / 1e18;
-                
+
                 balanceVal.innerText = `${balanceEth.toFixed(4)} ETH`;
                 writeToConsole(`Fetched Balance: ${balanceEth.toFixed(6)} ETH`);
             } catch (err) {
@@ -731,11 +780,11 @@ Listening for window.ethereum...</div>
 
             statusBadge.className = "status-badge connected";
             statusText.innerText = "Connected";
-            
+
             // Format address: 0x1234...abcd
             addressVal.innerText = `${address.substring(0, 8)}...${address.substring(address.length - 6)}`;
             addressBox.classList.add('interactive');
-            
+
             networkVal.innerText = getNetworkName(chainId);
 
             connectBtn.innerHTML = `
@@ -759,7 +808,7 @@ Listening for window.ethereum...</div>
             } else {
                 const newAccount = accounts[0];
                 writeToConsole(`Active Account: ${newAccount}`);
-                
+
                 // Get Current Chain ID and update connection
                 window.ethereum.request({ method: 'eth_chainId' })
                     .then(chainId => {
@@ -775,7 +824,7 @@ Listening for window.ethereum...</div>
         function handleChainChanged(chainId) {
             writeToConsole(`Active Network Switched: Chain ID ${chainId}`);
             showToast("Network Changed", `Active network changed to ${getNetworkName(chainId)}`, "info");
-            
+
             if (activeAddress) {
                 updateConnectionUI(activeAddress, chainId);
             }
@@ -787,12 +836,12 @@ Listening for window.ethereum...</div>
 
             window.ethereum.on('accountsChanged', handleAccountsChanged);
             window.ethereum.on('chainChanged', handleChainChanged);
-            
+
             // Listen for connection / disconnection logs
             window.ethereum.on('connect', (connectInfo) => {
                 writeToConsole(`Wallet connected to network with chain ID ${connectInfo.chainId}`);
             });
-            
+
             window.ethereum.on('disconnect', (error) => {
                 writeToConsole(`Wallet connection disconnected: ${error.message}`);
                 resetUI();
@@ -800,4 +849,5 @@ Listening for window.ethereum...</div>
         }
     </script>
 </body>
+
 </html>
