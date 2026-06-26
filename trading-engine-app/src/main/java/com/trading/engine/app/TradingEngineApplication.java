@@ -94,11 +94,11 @@ public class TradingEngineApplication {
         return args -> {
             Thread.ofVirtual().name("gRPC-Server").start(() -> {
                 try {
-                    Server server = ServerBuilder.forPort(9090)
+                    Server server = ServerBuilder.forPort(9099)
                             .addService(new TradingServiceImpl(engine, marketDataService))
                             .build();
 
-                    System.out.println("Starting gRPC server on port 9090...");
+                    System.out.println("Starting gRPC server on port 9099...");
                     server.start();
 
 

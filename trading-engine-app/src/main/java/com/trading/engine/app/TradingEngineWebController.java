@@ -42,7 +42,7 @@ public class TradingEngineWebController {
             return Arrays.asList("BTCUSD", "ETHUSD", "SOLUSD");
         }
         return Arrays.stream(symbolConfig.split(","))
-                .map(String::trim)
+                .map(s -> s.trim())
                 .filter(s -> !s.isEmpty())
                 .toList();
     }
